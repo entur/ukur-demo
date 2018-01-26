@@ -1,0 +1,138 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Subscriptions</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+</head>
+<body>
+
+<div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
+
+    <h2><a th:href="@{/subscriptions}">List of Subscriptions</a></h2>
+
+    <p>
+        Current active subscriptions from this service towards Ukur to receive push messages on
+        deviations in traffic. Add new ones or look at the push messages received for existing
+        subscriptions. This is a demo service, not intended for real usage - data is not persisted
+        and lost at restart!
+    </p>
+
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Name</th>
+            <th>Nmessages</th>
+            <th>From stops</th>
+            <th>To stops</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="s : ${#lists.sort(allSubscriptions)}">
+            <td th:text="${s.id}">id</td>
+            <td th:text="${s.name}">name</td>
+            <td>
+                <a th:href="@{/messages(id=${s.id})}" th:text="${s.numberOfMessages}">0</a>
+            </td>
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="row: ${#lists.sort(s.fromStopPoints)}">
+                        <td th:text="${row}">stopplace/quay</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="row : ${#lists.sort(s.toStopPoints)}">
+                        <td th:text="${row}">stopplace/quay</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<div>
+    <h2>Add new Subscription</h2>
+    <p>
+
+    </p>
+    <p>
+        Find valid ids for stop places and quays at <a href="https://stoppested.entur.org/">stoppested.entur.org</a>.
+        Only stops based on national ids will be handled by ukur (ie. starting with "NSR:").
+    </p>
+
+    <form class="form-horizontal" id="addSubscription" th:action="@{/subscriptions#addSubscription}" th:object="${subscription}" method="post">
+        <fieldset>
+            <div class="form-group">
+                <label class="control-label col-sm-2">Name</label>
+                <div class="col-sm-10">
+                    <input type="text" th:field="*{name}"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">From Stops</label>
+                <div class="col-sm-10">
+                    <table>
+                        <tbody>
+                        <tr th:each="row,rowStat : *{fromStopPoints}">
+                            <td>
+                                <input readonly="readonly" type="text" th:field="*{fromStopPoints[__${rowStat.index}__]}"/>
+                            </td>
+                            <td>
+                                <button type="submit" name="removeFrom" th:value="${rowStat.index}" class="btn btn-default">Remove stop</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="from_value"/></td>
+                            <td>
+                                <button type="submit" name="addFrom" class="btn btn-default">Add stop</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">To Stops</label>
+                <div class="col-sm-10">
+                    <table>
+                        <tbody>
+                        <tr th:each="row,rowStat : *{toStopPoints}">
+                            <td>
+                                <input readonly="readonly" type="text" th:field="*{toStopPoints[__${rowStat.index}__]}"/>
+                            </td>
+                            <td>
+                                <button type="submit" name="removeTo" th:value="${rowStat.index}" class="btn btn-default">Remove stop</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="to_value"/></td>
+                            <td>
+                                <button type="submit" name="addTo" class="btn btn-default">Add stop</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <div class="submit col-sm-offset-2 col-sm-10">
+                    <button type="submit" name="save" class="btn btn-default">Add Subscription</button>
+                </div>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+</body>
+</html>

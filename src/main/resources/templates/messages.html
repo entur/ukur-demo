@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Subscriptions</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+</head>
+<body>
+
+<p><a th:href="@{/subscriptions}">&lt; Back to Subscriptions</a></p>
+<h2>Messages for subscription <span th:text="${subscription.id}">id</span> - "<span th:text="${subscription.name}">name</span>"</h2>
+
+<div class="messagelist" th:unless="${#lists.isEmpty(messages)}">
+
+    <p>There are <span th:text="${#lists.size(messages)}">-1</span> messages, the last received <span th:text="${last}">LocalDateTime</span></p>
+    <a th:href="@{/messages(delete=true, id=${subscription.id})}">Clear all</a>
+    <table class="table table-bordered">
+        <thead>
+        <tr>
+            <th>Message name</th>
+            <th>XML Payload</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${messages}">
+            <td th:text="${m.messagename}">Name</td>
+            <td>
+                <pre class="prettyprint" th:text="${m.xmlPayload}">content</pre>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+
+<div th:if="${#lists.isEmpty(messages)}">
+    <p>There are no received push messages yet.</p>
+</div>
+
+</body>
+</html>
