@@ -74,4 +74,13 @@ public class SubscriptionController {
         subscription.getToStopPoints().remove(rowId.intValue());
         return "subscriptions";
     }
+
+    @RequestMapping(value = "/subscriptions", params = {"deleteSubscriptionId"})
+    public String removeSubscription( ModelMap model, HttpServletRequest req) {
+        String id = req.getParameter("deleteSubscriptionId");
+        subscriptionService.remove(id);
+        model.clear();
+        return "redirect:/subscriptions";
+    }
+
 }

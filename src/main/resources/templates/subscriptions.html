@@ -21,16 +21,19 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>Id</th>
+            <th>Id'er</th>
             <th>Name</th>
-            <th>Nmessages</th>
+            <th>Message counter</th>
             <th>From stops</th>
             <th>To stops</th>
+            <th></th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="s : ${#lists.sort(allSubscriptions)}">
-            <td th:text="${s.id}">id</td>
+            <td>Subscription id: <span th:text="${s.id}">id</span><br/>
+                push Id: <span th:text="${s.pushId}">pushId</span>
+            </td>
             <td th:text="${s.name}">name</td>
             <td>
                 <a th:href="@{/messages(id=${s.id})}" th:text="${s.numberOfMessages}">0</a>
@@ -52,6 +55,9 @@
                     </tr>
                     </tbody>
                 </table>
+            </td>
+            <td>
+                <a th:href="@{/subscriptions(deleteSubscriptionId=${s.id})}">Remove subscription</a>
             </td>
         </tr>
         </tbody>

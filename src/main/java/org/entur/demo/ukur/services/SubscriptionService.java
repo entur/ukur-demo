@@ -1,43 +1,93 @@
 package org.entur.demo.ukur.services;
 
 import org.entur.demo.ukur.entities.Subscription;
-import org.entur.demo.ukur.repositories.SubscriptionsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 
 @Service
 public class SubscriptionService {
 
-    private SubscriptionsRepository subscriptionsRepository;
+    private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    public SubscriptionService(SubscriptionsRepository subscriptionsRepository) {
-        this.subscriptionsRepository = subscriptionsRepository;
+    private String ukurURL;
+    private String pushURL;
+    private long idCounter = 0;
+    private final String basePushId;//need some uniqueness so we don't reuse push addresses at restart
+
+    private HashMap<String, Subscription> subscriptions = new HashMap<>();
+
+    public SubscriptionService(@Value("${ukur.subscription.url}") String ukurURL,
+                               @Value("${push.baseurl}") String pushURL) {
+        basePushId = Long.toString(System.currentTimeMillis(), Character.MAX_RADIX)+"-";
+        logger.info("Started with ukurURL={}, pushURL={} and basePushId={}", ukurURL, pushURL, basePushId);
+        this.ukurURL = ukurURL;
+        this.pushURL = pushURL;
+        if (!pushURL.endsWith("/")) {
+            this.pushURL = pushURL + "/";
+        }
         addTestSubscriptions();
     }
 
     public Collection<Subscription> list() {
-        return this.subscriptionsRepository.findAll();
+        return Collections.unmodifiableCollection(subscriptions.values());
     }
 
     public Subscription get(String id) {
-        return this.subscriptionsRepository.findById(id);
+        if (id != null) {
+            for (Subscription subscription : subscriptions.values()) {
+                if (id.equals(subscription.getId())) {
+                    return subscription;
+                }
+            }
+        }
+        return null;
+    }
+
+    public Subscription getByPushId(String id) {
+        return subscriptions.get(id);
     }
 
     public void add(final Subscription subscription) {
-        //TODO: Call ukur and subscribe!
-        this.subscriptionsRepository.add(subscription);
+        RestTemplate restTemplate = new RestTemplate();
+        try {
+            URI url = URI.create(ukurURL);
+            String pushId = basePushId + idCounter++;
+            subscription.setPushId(pushId);
+            subscription.setPushAddress(pushURL+pushId);
+            Subscription returnedSubscription = restTemplate.postForObject(url, subscription, Subscription.class);
+            logger.info("Added subscription at ukur, received subscription id {}", returnedSubscription.getId());
+            subscription.setId(returnedSubscription.getId());
+            subscriptions.put(pushId, subscription);
+        } catch (Exception e) {
+            logger.error("Could not add new subscription", e);
+        }
     }
 
-    public void remove(final Subscription subscription) {
-        //TODO: Call ukur and remove subscription (will also be removed automatically if we dont ACK when ukur pushes on this subscription)
-        this.subscriptionsRepository.remove(subscription);
+    public void remove(String id) {
+        Subscription subscription = get(id);
+        if (subscription != null) {
+            subscriptions.remove(subscription.getPushId());
+            RestTemplate restTemplate = new RestTemplate();
+            try {
+                URI url = URI.create(ukurURL + "/" + id);
+                logger.debug("Removes subscription with delete to url {}", url);
+                restTemplate.delete(url);
+            } catch (Exception e) {
+                logger.warn("Could not remove subscription with id {}", id, e);
+            }
+        }
     }
+
 
     private void addTestSubscriptions() {
-        //TODO: Vi trenger noen test susbcriptions så vi slipper å taste dette hver gang etter oppstart... Hardkodes her i første omgang!
         Subscription askerTilOslo = new Subscription();
         askerTilOslo.setName("Asker til OsloS");
         askerTilOslo.addFromStopPoint("NSR:StopPlace:418");

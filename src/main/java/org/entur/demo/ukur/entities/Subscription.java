@@ -1,5 +1,7 @@
 package org.entur.demo.ukur.entities;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import java.io.Serializable;
 import java.util.*;
 
@@ -9,7 +11,11 @@ public class Subscription implements Serializable, Comparable {
     private String name;
     private ArrayList<String> fromStopPoints = new ArrayList<>();
     private ArrayList<String> toStopPoints = new ArrayList<>();
+    private String pushAddress;
+    @JsonIgnore
     private int numberOfMessages = 0;
+    @JsonIgnore
+    private String pushId;
 
 
     public ArrayList<String> getFromStopPoints() {
@@ -52,6 +58,22 @@ public class Subscription implements Serializable, Comparable {
         this.numberOfMessages = numberOfMessages;
     }
 
+    public String getPushAddress() {
+        return pushAddress;
+    }
+
+    public void setPushAddress(String pushAddress) {
+        this.pushAddress = pushAddress;
+    }
+
+    public String getPushId() {
+        return pushId;
+    }
+
+    public void setPushId(String pushId) {
+        this.pushId = pushId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -68,6 +90,6 @@ public class Subscription implements Serializable, Comparable {
     @Override
     public int compareTo(Object o) {
         Subscription that = (Subscription) o;
-        return this.id.compareTo(that.id);
+        return this.pushId.compareTo(that.pushId);
     }
 }

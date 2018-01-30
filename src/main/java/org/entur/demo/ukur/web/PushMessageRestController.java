@@ -21,8 +21,8 @@ public class PushMessageRestController {
     @Autowired
     private SubscriptionService subscriptionService;
 
-    @RequestMapping(path="/push/{subscriptionId}", method = RequestMethod.POST)
-    public PushAcknowledge receivePushMessage(@PathVariable("subscriptionId")String subscriptionId, @RequestBody PushMessage pushMessage) {
+    @RequestMapping(path= "/push/{pushId}", method = RequestMethod.POST)
+    public PushAcknowledge receivePushMessage(@PathVariable("pushId")String pushId, @RequestBody PushMessage pushMessage) {
         String msg;
         if (pushMessage == null) {
             msg = "null";
@@ -31,14 +31,14 @@ public class PushMessageRestController {
                     "node       = '" + pushMessage.getNode() + "\'\n" +
                     "xmlPayload = '" + pushMessage.getXmlPayload() + '\'';
         }
-        logger.debug("Called with subscriptionId='{}' and PushMessage:\n{}", subscriptionId, msg);
-        Subscription subscription = subscriptionService.get(subscriptionId);
+        logger.debug("Called with pushId='{}' and PushMessage:\n{}", pushId, msg);
+        Subscription subscription = subscriptionService.getByPushId(pushId);
         if (subscription == null) {
-            logger.warn("Received push message for unknown subscription id '{}' - responds {}", subscriptionId, PushAcknowledge.FORGET_ME);
+            logger.warn("Received push message for unknown push id '{}' - responds {}", pushId, PushAcknowledge.FORGET_ME);
             return PushAcknowledge.FORGET_ME;
         } else {
-            logger.info("Received new push message for subscription id '{}'", subscriptionId);
-            messageService.addPushMessage(subscriptionId, pushMessage);
+            logger.info("Received new push message for pushId={} and subscriptionId={}", pushId, subscription.getId());
+            messageService.addPushMessage(subscription.getId(), pushMessage);
             return PushAcknowledge.OK;
         }
     }
