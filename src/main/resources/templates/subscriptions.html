@@ -1,4 +1,19 @@
 <!DOCTYPE HTML>
+<!--
+  ~ Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence");
+  ~ You may not use this work except in compliance with the Licence.
+  ~ You may obtain a copy of the Licence at:
+  ~
+  ~  https://joinup.ec.europa.eu/software/page/eupl
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the Licence is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Subscriptions</title>
@@ -21,7 +36,7 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>Id'er</th>
+            <th>Ids</th>
             <th>Name</th>
             <th>Message counter</th>
             <th>From stops</th>
@@ -72,6 +87,16 @@
     <p>
         Find valid ids for stop places and quays at <a href="https://stoppested.entur.org/">stoppested.entur.org</a>.
         Only stops based on national ids will be handled by ukur (ie. starting with "NSR:").
+        <br/>
+        New subscriptions will receive push messages after these rules:
+        <ul>
+            <li>ET messages: If a subscription has one 'From stop' and one 'To stop' in correct order in an
+                EstimatedVehicleJourney with delays, the entire EstimatedVehicleJourney is pushed after recorded
+                calls and other estimated calls are removed to minimize the message size.</li>
+            <li>SX messages: If one of the stops from a subscriptions is affected by a PtSituationElement, the
+                entire PtSituationElement is pushed after all affects are removed (this causes important information
+                to be lost, and will be fixed in ukur)</li>
+        </ul>
     </p>
 
     <form class="form-horizontal" id="addSubscription" th:action="@{/subscriptions#addSubscription}" th:object="${subscription}" method="post">
