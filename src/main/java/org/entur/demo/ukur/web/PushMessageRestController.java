@@ -36,13 +36,13 @@ public class PushMessageRestController {
     @Autowired
     private SubscriptionService subscriptionService;
 
-    @RequestMapping(path= "/push/{pushId}", method = RequestMethod.POST)
-    public PushAcknowledge receivePushMessage(@PathVariable("pushId")String pushId, @RequestBody PushMessage pushMessage) {
+    @RequestMapping(path = "/push/{pushId}", method = RequestMethod.POST)
+    public PushAcknowledge receivePushMessage(@PathVariable("pushId") String pushId, @RequestBody PushMessage pushMessage) {
         String msg;
         if (pushMessage == null) {
             msg = "null";
         } else {
-            msg =   "messagename= '" + pushMessage.getMessagename()+ "\'\n" +
+            msg = "messagename= '" + pushMessage.getMessagename() + "\'\n" +
                     "node       = '" + pushMessage.getNode() + "\'\n" +
                     "xmlPayload = '" + pushMessage.getXmlPayload() + '\'';
         }
@@ -56,5 +56,15 @@ public class PushMessageRestController {
             messageService.addPushMessage(subscription.getId(), pushMessage);
             return PushAcknowledge.OK;
         }
+    }
+
+    @RequestMapping(path = "/health/ready")
+    public String ready() {
+        return "OK";
+    }
+
+    @RequestMapping(path = "/health/live")
+    public String live() {
+        return "OK";
     }
 }
