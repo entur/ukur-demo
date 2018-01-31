@@ -24,7 +24,7 @@
 
 <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
 
-    <h2><a th:href="@{/subscriptions}">List of Subscriptions</a></h2>
+    <h2><a th:href="@{subscriptions}">List of Subscriptions</a></h2>
 
     <p>
         Current active subscriptions from this service to receive push messages on
@@ -53,7 +53,7 @@
             </td>
             <td th:text="${s.name}">name</td>
             <td>
-                <a th:href="@{/messages(id=${s.id})}" th:text="${s.numberOfMessages}">0</a>
+                <a th:href="@{messages(id=${s.id})}" th:text="${s.numberOfMessages}">0</a>
             </td>
             <td>
                 <table>
@@ -74,7 +74,7 @@
                 </table>
             </td>
             <td>
-                <a th:href="@{/subscriptions(deleteSubscriptionId=${s.id})}">Remove subscription</a>
+                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}">Remove subscription</a>
             </td>
         </tr>
         </tbody>
@@ -101,7 +101,7 @@
         </ul>
     </p>
 
-    <form class="form-horizontal" id="addSubscription" th:action="@{/subscriptions#addSubscription}" th:object="${subscription}" method="post">
+    <form class="form-horizontal" id="addSubscription" th:action="@{subscriptions#addSubscription}" th:object="${subscription}" method="post">
         <fieldset>
             <div class="form-group">
                 <label class="control-label col-sm-2">Name</label>

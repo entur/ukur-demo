@@ -23,13 +23,13 @@
 </head>
 <body>
 
-<p><a th:href="@{/subscriptions}">&lt; Back to Subscriptions</a></p>
+<p><a th:href="@{subscriptions}">&lt; Back to Subscriptions</a></p>
 <h2>Messages for subscription <span th:text="${subscription.id}">id</span> - "<span th:text="${subscription.name}">name</span>"</h2>
 
 <div class="messagelist" th:unless="${#lists.isEmpty(messages)}">
 
     <p>There are <span th:text="${#lists.size(messages)}">-1</span> messages, the last received <span th:text="${last}">LocalDateTime</span></p>
-    <a th:href="@{/messages(delete=true, id=${subscription.id})}">Clear all</a>
+    <a th:href="@{messages(delete=true, id=${subscription.id})}">Clear all</a>
     <table class="table table-bordered">
         <thead>
         <tr>
