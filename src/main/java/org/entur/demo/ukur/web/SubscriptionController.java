@@ -59,7 +59,7 @@ public class SubscriptionController {
         }
         this.subscriptionService.add(subscription);
         model.clear();
-        return "redirect:/subscriptions";
+        return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "/subscriptions", params = {"addFrom", "from_value"})
@@ -95,7 +95,7 @@ public class SubscriptionController {
         String id = req.getParameter("deleteSubscriptionId");
         subscriptionService.remove(id);
         model.clear();
-        return "redirect:/subscriptions";
+        return "redirect:subscriptions";
     }
 
 }
