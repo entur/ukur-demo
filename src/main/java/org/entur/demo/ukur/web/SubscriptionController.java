@@ -20,7 +20,7 @@ import org.entur.demo.ukur.services.MessageService;
 import org.entur.demo.ukur.services.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.ModelMap;
+import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,6 +29,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
 
 @Controller
+@SuppressWarnings("unused")
 public class SubscriptionController {
 
     @Autowired
@@ -46,20 +47,17 @@ public class SubscriptionController {
         return all;
     }
 
-    @SuppressWarnings("unused")
     @RequestMapping({"/", "/subscriptions"})
     public String showSubscription(Subscription subscription) {
         return "subscriptions";
     }
 
     @RequestMapping(value = "/subscriptions", params = {"save"})
-    public String saveSubscription(Subscription subscription, BindingResult bindingResult, ModelMap model) {
-        if (bindingResult.hasErrors()) {
-            return "subscriptions";
+    public String saveSubscription(Subscription subscription, BindingResult bindingResult, Model model) {
+        if (!bindingResult.hasErrors()) {
+            this.subscriptionService.add(subscription);
         }
-        this.subscriptionService.add(subscription);
-        model.clear();
-        return "redirect:subscriptions";
+        return "subscriptions";
     }
 
     @RequestMapping(value = "/subscriptions", params = {"addFrom", "from_value"})
@@ -91,11 +89,10 @@ public class SubscriptionController {
     }
 
     @RequestMapping(value = "/subscriptions", params = {"deleteSubscriptionId"})
-    public String removeSubscription( ModelMap model, HttpServletRequest req) {
+    public String removeSubscription( Subscription s, Model model, HttpServletRequest req) {
         String id = req.getParameter("deleteSubscriptionId");
         subscriptionService.remove(id);
-        model.clear();
-        return "redirect:subscriptions";
+        return "subscriptions";
     }
 
 }
