@@ -15,36 +15,14 @@
   -->
 
 <configuration>
-    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
-            <providers>
-                <pattern>
-                    <pattern>
-                        {
-                            "serviceContext": {
-                                "service": "ukur"
-                            },
-                        "message": "%message\n%ex{full}",
-                        "severity": "%level",
-                        "breadcrumb": "%X{camel.breadcrumbId}",
-                            "reportLocation": {
-                                "filePath": "%logger",
-                                "lineNumber": "%line",
-                                "functionName": "%method"
-                            }
-                        }
-                    </pattern>
-                </pattern>
-            </providers>
-        </encoder>
-    </appender>
     <appender name="localdev" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>%date{HH:mm:ss} [%thread] %-5level %logger{35} - %msg %n</pattern>
         </encoder>
     </appender>
     <logger name="org.entur" level="DEBUG"/>
+    <logger name="WireMock" level="WARN"/>
     <root level="INFO">
-        <appender-ref ref="${logback-appender:-console}"/>
+        <appender-ref ref="localdev"/>
     </root>
 </configuration>

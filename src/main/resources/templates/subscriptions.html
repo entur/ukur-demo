@@ -28,10 +28,11 @@
 
     <p>
         Current active subscriptions from this service to receive push messages on
-        deviations in traffic.
-        <br/>
+        deviations in traffic.<br/>
         Add new ones or look at the push messages received for existing subscriptions.
-        <br/>This is a demo service, not intended for real usage - data is not persisted
+    </p>
+    <p>
+        This is a <mark>demo service</mark>, not intended for real usage - data is not persisted
         and lost at restart!
     </p>
 
@@ -84,19 +85,17 @@
 <div>
     <h2>Add new Subscription</h2>
     <p>
-
-    </p>
-    <p>
         Find valid ids for stop places and quays at <a href="https://stoppested.entur.org/">stoppested.entur.org</a>.
         Only stops based on national ids will be handled by ukur (ie. starting with "NSR:").
-        <br/>
+    </p>
+    <p>
         New subscriptions will receive push messages after these rules:
         <ul>
             <li>ET messages: If a subscription has one 'From stop' and one 'To stop' in correct order in an
                 EstimatedVehicleJourney with delays, the entire EstimatedVehicleJourney is pushed after recorded
                 calls and other estimated calls are removed to minimize the message size.</li>
-            <li>SX messages: If one of the stops from a subscriptions is affected by a PtSituationElement, the
-                entire PtSituationElement is pushed after all affects are removed (this causes important information
+            <li>SX messages: If one of the stops from a subscription is affected by a PtSituationElement, the
+                entire PtSituationElement is pushed after all affects are removed (Note: this causes important information
                 to be lost, and will be fixed in ukur)</li>
         </ul>
     </p>

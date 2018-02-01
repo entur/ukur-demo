@@ -20,6 +20,8 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
     <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 
@@ -33,15 +35,16 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th>Message name</th>
+            <th width="20%">Message name</th>
             <th>XML Payload</th>
         </tr>
         </thead>
         <tbody>
-        <tr th:each="m : ${messages}">
+        <tr th:each="m,rowStat : ${messages}">
             <td th:text="${m.messagename}">Name</td>
             <td>
-                <pre class="prettyprint" th:text="${m.xmlPayload}">content</pre>
+                <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="collapse">expand/collapse xml</a>
+                <pre th:id="|xml${rowStat.index}|" class="prettyprint collapse" th:text="${m.xmlPayload}">content</pre>
             </td>
         </tr>
         </tbody>
