@@ -26,25 +26,34 @@
 <body>
 
 <p><a th:href="@{subscriptions}">&lt; Back to Subscriptions</a></p>
-<h2>Messages for subscription <span th:text="${subscription.id}">id</span> - "<span th:text="${subscription.name}">name</span>"</h2>
+<h2>Messages for subscription "<span th:text="${subscription.name}">name</span>"<small><br/><span th:text="${subscription.id}">id</span></small></h2>
 
 <div class="messagelist" th:unless="${#lists.isEmpty(messages)}">
 
     <p>There are <span th:text="${#lists.size(messages)}">-1</span> messages, the last received <span th:text="${last}">LocalDateTime</span></p>
+
+    <div th:if="${#lists.size(messages) == MAX}">
+        <p>Note: Only <span th:text="${MAX}"/> messages are stored, after that the oldest messages are removed as new ones arrive.</p>
+    </div>
+
     <a th:href="@{messages(delete=true, id=${subscription.id})}">Clear all</a>
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th width="20%">Message name</th>
+            <th width="20%">Received</th>
+            <th width="5%">Type</th>
+            <th>Human readable message</th>
             <th>XML Payload</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="m,rowStat : ${messages}">
-            <td th:text="${m.messagename}">Name</td>
+            <td th:text="${m.getReceived()}">11:22</td>
+            <td th:text="${m.getType()}">ET</td>
+            <td th:text="${m.getHumanReadable()}">Blabla bla blabla blabla bla</td>
             <td>
                 <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="collapse">expand/collapse xml</a>
-                <pre th:id="|xml${rowStat.index}|" class="prettyprint collapse" th:text="${m.xmlPayload}">content</pre>
+                <pre th:id="|xml${rowStat.index}|" class="prettyprint collapse" th:text="${m.getXmlString()}">content</pre>
             </td>
         </tr>
         </tbody>

@@ -25,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
 
+import static org.entur.demo.ukur.services.MessageService.MAX_SIZE_PER_SUBSCRIPTION;
+
 @Controller
 public class MessageController {
 
@@ -41,6 +43,7 @@ public class MessageController {
         model.addAttribute("subscription",subscription);
         model.addAttribute("messages", messageService.getMessages(id));
         model.addAttribute("last", messageService.getLastMessageReceived(id));
+        model.addAttribute("MAX", MAX_SIZE_PER_SUBSCRIPTION);
         return "messages";
     }
 

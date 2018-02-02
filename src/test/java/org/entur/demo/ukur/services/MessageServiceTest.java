@@ -15,48 +15,80 @@
 
 package org.entur.demo.ukur.services;
 
+import org.entur.demo.ukur.entities.MessageTypeEnum;
 import org.entur.demo.ukur.entities.PushMessage;
+import org.entur.demo.ukur.entities.ReceivedMessage;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.runners.MockitoJUnitRunner;
 
+import java.util.Collection;
+
+import static org.entur.demo.ukur.services.MessageService.MAX_SIZE_PER_SUBSCRIPTION;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
+@RunWith(MockitoJUnitRunner.class)
 public class MessageServiceTest {
+
+    @InjectMocks
+    private MessageService messageService;
 
     @Test
     public void testUnmarshallingWithAndWithoutNamespace() {
-        MessageService messageService = new MessageService();
+
         PushMessage pushMessage = new PushMessage();
         pushMessage.setNode("test-node");
         pushMessage.setMessagename("SX test message name");
         final String subscriptionId = "1";
         assertEquals(0, messageService.getMessageCount(subscriptionId));
-        assertEquals(0, messageService.getPtSituationElements(subscriptionId).size());
-        assertEquals(0, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
         pushMessage.setXmlPayload("<?xml version=\"1.0\" ?>\n<PtSituationElement/>");
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(1, messageService.getMessageCount(subscriptionId));
-        assertEquals(1, messageService.getPtSituationElements(subscriptionId).size());
-        assertEquals(0, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
+        assertEquals(1, count(messageService.getMessages(subscriptionId), MessageTypeEnum.SX));
+        assertEquals(0, count(messageService.getMessages(subscriptionId), MessageTypeEnum.ET));
         pushMessage.setXmlPayload("<?xml version=\"1.0\" ?>\n<PtSituationElement xmlns=\"http://www.siri.org.uk/siri\"/>");
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(2, messageService.getMessageCount(subscriptionId));
-        assertEquals(2, messageService.getPtSituationElements(subscriptionId).size());
-        assertEquals(0, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
+        assertEquals(2, count(messageService.getMessages(subscriptionId), MessageTypeEnum.SX));
+        assertEquals(0, count(messageService.getMessages(subscriptionId), MessageTypeEnum.ET));
         pushMessage.setXmlPayload("<?xml version=\"1.0\" ?>\n<EstimatedVehicleJourney/>");
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(3, messageService.getMessageCount(subscriptionId));
-        assertEquals(2, messageService.getPtSituationElements(subscriptionId).size());
-        assertEquals(1, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
+        assertEquals(2, count(messageService.getMessages(subscriptionId), MessageTypeEnum.SX));
+        assertEquals(1, count(messageService.getMessages(subscriptionId), MessageTypeEnum.ET));
         pushMessage.setXmlPayload("<?xml version=\"1.0\" ?>\n<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\"/>");
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(4, messageService.getMessageCount(subscriptionId));
-        assertEquals(2, messageService.getPtSituationElements(subscriptionId).size());
-        assertEquals(2, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
+        assertEquals(2, count(messageService.getMessages(subscriptionId), MessageTypeEnum.SX));
+        assertEquals(2, count(messageService.getMessages(subscriptionId), MessageTypeEnum.ET));
+    }
+
+    private int count(Collection<ReceivedMessage> messages, MessageTypeEnum type) {
+        int counter = 0;
+        for (ReceivedMessage message : messages) {
+            if (type == message.getType()) {
+                counter++;
+            }
+        }
+        return counter;
+    }
+
+    @Test
+    public void verifyEviction() {
+        String subscriptionId = "eviction";
+        PushMessage pushMessage = new PushMessage();
+        pushMessage.setXmlPayload("<data/>");
+        assertEquals(0, messageService.getMessageCount(subscriptionId));
+        for (int i = 0; i < MAX_SIZE_PER_SUBSCRIPTION+2; i++) {
+             messageService.addPushMessage(subscriptionId, pushMessage);
+        }
+        assertEquals(MAX_SIZE_PER_SUBSCRIPTION, messageService.getMessageCount(subscriptionId));
     }
 
     @Test
     public void ptSituationElement() {
-        MessageService messageService = new MessageService();
         PushMessage pushMessage = new PushMessage();
         pushMessage.setNode("test-node");
         pushMessage.setMessagename("SX test message name");
@@ -82,15 +114,16 @@ public class MessageServiceTest {
                 "</PtSituationElement>");
         String subscriptionId = "SX-1";
         assertEquals(0, messageService.getMessageCount(subscriptionId));
-        assertEquals(0, messageService.getPtSituationElements(subscriptionId).size());
+        assertEquals(0, messageService.getMessages(subscriptionId).size());
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(1, messageService.getMessageCount(subscriptionId));
-        assertEquals(1, messageService.getPtSituationElements(subscriptionId).size());
+        ReceivedMessage message = messageService.getMessages(subscriptionId).iterator().next();
+        assertEquals(MessageTypeEnum.SX, message.getType());
+        assertNotNull(message.getPtSituationElement());
     }
 
     @Test
     public void estimatedVehicleJourney() {
-        MessageService messageService = new MessageService();
         PushMessage pushMessage = new PushMessage();
         pushMessage.setNode("test-node");
         pushMessage.setMessagename("SX test message name");
@@ -126,9 +159,10 @@ public class MessageServiceTest {
                 "</EstimatedVehicleJourney>");
         String subscriptionId = "ET-1";
         assertEquals(0, messageService.getMessageCount(subscriptionId));
-        assertEquals(0, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
         messageService.addPushMessage(subscriptionId, pushMessage);
         assertEquals(1, messageService.getMessageCount(subscriptionId));
-        assertEquals(1, messageService.getEstimatedVehicleJourneys(subscriptionId).size());
+        ReceivedMessage message = messageService.getMessages(subscriptionId).iterator().next();
+        assertEquals(MessageTypeEnum.ET, message.getType());
+        assertNotNull(message.getEstimatedVehicleJourney());
     }
 }
