@@ -129,8 +129,6 @@ public class MessageService {
             last = description.getValue();
         }
         if (norwegian == null) {
-            //Use last since that seems to be where the english text is
-            //TODO: because of namespace issues lang is not unmarshalled... Will be fixed when ukur sends proper xml.
             return last;
         }
         return norwegian;

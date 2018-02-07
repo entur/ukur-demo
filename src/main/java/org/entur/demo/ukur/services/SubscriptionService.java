@@ -75,12 +75,11 @@ public class SubscriptionService {
         try {
             URI url = URI.create(ukurURL);
             String pushId = basePushId + idCounter++;
-            subscription.setPushId(pushId);
             subscription.setPushAddress(pushURL+pushId);
             Subscription returnedSubscription = restTemplate.postForObject(url, subscription, Subscription.class);
-            logger.info("Added subscription at ukur, received subscription id {}", returnedSubscription.getId());
-            subscription.setId(returnedSubscription.getId());
-            subscriptions.put(pushId, subscription);
+            logger.info("Added subscription at Ukur, received subscription id {}", returnedSubscription.getId());
+            returnedSubscription.setPushId(pushId); //not part of Ukur's subscription
+            subscriptions.put(pushId, returnedSubscription); //uses returned subscription since it is normalized
         } catch (Exception e) {
             logger.error("Could not add new subscription", e);
         }
