@@ -40,18 +40,17 @@
     <table class="table table-bordered">
         <thead>
         <tr>
-            <th width="20%">Received</th>
-            <th width="5%">Type</th>
-            <th>Human readable message</th>
-            <th>XML Payload</th>
+            <th width="5%">Received</th>
+            <th width="2%">Type</th>
+            <th width="93%">Message</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="m,rowStat : ${messages}">
-            <td th:text="${m.getReceived()}">11:22</td>
+            <td th:text="${#temporals.format(m.getReceived(), 'd/M HH:mm:ss')}">11:22</td>
             <td th:text="${m.getType()}">ET</td>
-            <td th:text="${m.getHumanReadable()}">Blabla bla blabla blabla bla</td>
-            <td>
+            <td> <span th:text="${m.getHumanReadable()}">Blabla bla blabla blabla bla</span>
+                <br/>
                 <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="collapse">expand/collapse xml</a>
                 <pre th:id="|xml${rowStat.index}|" class="prettyprint collapse" th:text="${m.getXmlString()}">content</pre>
             </td>

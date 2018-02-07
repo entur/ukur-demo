@@ -66,6 +66,10 @@
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
             <version>${spring.version}</version>
         </dependency>
+            <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-java8time</artifactId>
+        </dependency>
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>

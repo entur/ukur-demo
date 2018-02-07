@@ -15,35 +15,26 @@
 
 package org.entur.demo.ukur.services;
 
-import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.EvictingQueue;
-import net.logstash.logback.encoder.org.apache.commons.lang.StringUtils;
 import org.entur.demo.ukur.entities.MessageTypeEnum;
-import org.entur.demo.ukur.entities.PushMessage;
 import org.entur.demo.ukur.entities.ReceivedMessage;
-import org.entur.demo.ukur.entities.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.xml.sax.*;
-import org.xml.sax.helpers.XMLFilterImpl;
 import uk.org.siri.siri20.*;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Unmarshaller;
-import javax.xml.bind.UnmarshallerHandler;
-import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.io.IOException;
-import java.io.StringReader;
+import javax.xml.bind.Marshaller;
+import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
 
 @Service
 public class MessageService {
@@ -54,11 +45,9 @@ public class MessageService {
     private final JAXBContext jaxbContext;
     private HashMap<String, Collection<ReceivedMessage>> messageStore = new HashMap<>();
     private HashMap<String, LocalDateTime> lastMessageReceived = new HashMap<>();
-    private SubscriptionService subscriptionService;
 
     @Autowired
-    public MessageService(SubscriptionService subscriptionService) {
-        this.subscriptionService = subscriptionService;
+    public MessageService() {
         try {
             jaxbContext = JAXBContext.newInstance(Siri.class);
         } catch (JAXBException e) {
@@ -74,40 +63,23 @@ public class MessageService {
         return getMessages(subscriptionId).size();
     }
 
-    public void addPushMessage(String subscriptionId, PushMessage pushMessage) {
-        CacheBuilder.newBuilder().expireAfterWrite(2, TimeUnit.DAYS).build();
-        Collection<ReceivedMessage> pushMessages = messageStore.computeIfAbsent(subscriptionId, k -> EvictingQueue.create(MAX_SIZE_PER_SUBSCRIPTION));
-        ReceivedMessage message = new ReceivedMessage(pushMessage.getXmlPayload());
+    public void addPushMessage(String subscriptionId, EstimatedVehicleJourney estimatedVehicleJourney) {
+        Collection<ReceivedMessage> pushMessages = getReceivedMessages(subscriptionId);
+        ReceivedMessage message = new ReceivedMessage(toString(estimatedVehicleJourney));
         pushMessages.add(message);
+        message.setType(MessageTypeEnum.ET);
         lastMessageReceived.put(subscriptionId, message.getReceived());
+        message.setEstimatedVehicleJourney(estimatedVehicleJourney);
+        message.setHumanReadable(makeHumanReadable(estimatedVehicleJourney));
+    }
 
-        String xmlPayload = pushMessage.getXmlPayload();
-        //TODO: Have ukur push the xml element directly (as application/xml) - and let the server deal with this...
-        if (xmlPayload == null) {
-            logger.error("Empty XML payload for subscriptionId {}", subscriptionId);
-        } else if (xmlPayload.contains("<EstimatedVehicleJourney")) {
-            message.setType(MessageTypeEnum.ET);
-            try {
-                EstimatedVehicleJourney estimatedVehicleJourney = unmarshalSiri(xmlPayload, EstimatedVehicleJourney.class);
-                message.setEstimatedVehicleJourney(estimatedVehicleJourney);
-                message.setHumanReadable(makeHumanReadable(estimatedVehicleJourney, subscriptionId));
-            } catch (Exception e) {
-                logger.error("Could not unmarshall xmlpayload as EstimatedVehicleJourney", e);
-            }
-        } else if (xmlPayload.contains("<PtSituationElement")) {
-            message.setType(MessageTypeEnum.SX);
-            try {
-                PtSituationElement ptSituationElement = unmarshalSiri(xmlPayload, PtSituationElement.class);
-                message.setPtSituationElement(ptSituationElement);
-                message.setHumanReadable(makeHumanReadable(ptSituationElement, subscriptionId));
-            } catch (Exception e) {
-                logger.error("Could not unmarshall xmlpayload as PtSituationElement", e);
-            }
-        } else {
-            message.setType(MessageTypeEnum.UNKNOWN);
-            logger.warn("Unknown xml payload: \n{}", xmlPayload);
-        }
-
+    public void addPushMessage(String subscriptionId, PtSituationElement ptSituationElement) {
+        Collection<ReceivedMessage> pushMessages = getReceivedMessages(subscriptionId);
+        ReceivedMessage message = new ReceivedMessage(toString(ptSituationElement));
+        pushMessages.add(message);
+        message.setType(MessageTypeEnum.SX);
+        message.setPtSituationElement(ptSituationElement);
+        message.setHumanReadable(makeHumanReadable(ptSituationElement));
     }
 
     public Collection<ReceivedMessage> getMessages(String subscriptionId) {
@@ -119,22 +91,25 @@ public class MessageService {
         lastMessageReceived.remove(id);
     }
 
-    @SuppressWarnings({"unused", "unchecked"})
-    private <T> T unmarshalSiri(String xmlString, Class<T> elementType) throws JAXBException, ParserConfigurationException, SAXException, IOException {
-        XMLFilter filter = new SiriNamespaceFilter();
-        SAXParserFactory spf = SAXParserFactory.newInstance();
-        SAXParser sp = spf.newSAXParser();
-        XMLReader xr = sp.getXMLReader();
-        filter.setParent(xr);
-        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        UnmarshallerHandler unmarshallerHandler = jaxbUnmarshaller.getUnmarshallerHandler();
-        filter.setContentHandler(unmarshallerHandler);
-        InputSource xml = new InputSource(new StringReader(xmlString));
-        filter.parse(xml);
-        return (T) unmarshallerHandler.getResult();
+    private Collection<ReceivedMessage> getReceivedMessages(String subscriptionId) {
+        return messageStore.computeIfAbsent(subscriptionId, k -> EvictingQueue.create(MAX_SIZE_PER_SUBSCRIPTION));
     }
 
-    private String makeHumanReadable(PtSituationElement ptSituationElement, String subscriptionId) {
+    private String toString(Object siriElement) {
+        try {
+            Marshaller marshaller = jaxbContext.createMarshaller();
+            marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            StringWriter writer = new StringWriter();
+            marshaller.marshal(siriElement, writer);
+            return writer.getBuffer().toString();
+        } catch (JAXBException e) {
+            logger.error("Could not marshall", e);
+        }
+        return null;
+    }
+
+
+    private String makeHumanReadable(PtSituationElement ptSituationElement) {
         //TODO: Implement properly
         List<DefaultedTextStructure> descriptions = ptSituationElement.getDescriptions();
         if (descriptions == null || descriptions.isEmpty()) {
@@ -161,9 +136,7 @@ public class MessageService {
         return norwegian;
     }
 
-    private String makeHumanReadable(EstimatedVehicleJourney estimatedVehicleJourney, String subscriptionId) {
-
-        Subscription subscription = subscriptionService.get(subscriptionId);
+    private String makeHumanReadable(EstimatedVehicleJourney estimatedVehicleJourney) {
 
         StringBuilder result = new StringBuilder();
 
@@ -181,95 +154,102 @@ public class MessageService {
             result.append(" towards ").append(directionRef.getValue());
         }
 
-        if (estimatedVehicleJourney.getEstimatedCalls() != null) {
+        RecordedCall recordedCall = null;
+        if (estimatedVehicleJourney.getRecordedCalls() != null && estimatedVehicleJourney.getRecordedCalls().getRecordedCalls() != null) {
+            int noRecordedCalls = estimatedVehicleJourney.getRecordedCalls().getRecordedCalls().size();
+            if (noRecordedCalls == 1) {
+                recordedCall = estimatedVehicleJourney.getRecordedCalls().getRecordedCalls().get(0);
+            }
+            if (noRecordedCalls > 1) {
+                //Should not happen, but we could use the subscriptions from-list to find a relevant call...
+                logger.warn("Expected zero or one recorded calls, got {}", noRecordedCalls);
+            }
+        }
+
+        EstimatedCall fromCall = null;
+        EstimatedCall toCall = null;
+        if (estimatedVehicleJourney.getEstimatedCalls() != null && estimatedVehicleJourney.getEstimatedCalls().getEstimatedCalls() != null) {
             List<EstimatedCall> estimatedCalls = estimatedVehicleJourney.getEstimatedCalls().getEstimatedCalls();
-            if (estimatedCalls == null || estimatedCalls.size() != 1) {
-                logger.warn("Did not receive one estimated call as expected - instead got this: {}", estimatedCalls);
-                result.append(" is delayed/cancelled (does not have enough data to extract details)");
+            if (estimatedCalls.size() == 2) {
+                fromCall = estimatedCalls.get(0);
+                toCall = estimatedCalls.get(1);
+            } else if (estimatedCalls.size() == 1) {
+                toCall = estimatedCalls.get(0);
             } else {
-                EstimatedCall estimatedCall = estimatedCalls.get(0);
-                StopPointRef stopPointRef = estimatedCall.getStopPointRef();
-                List<NaturalLanguageStringStructure> stopPointNames = estimatedCall.getStopPointNames();
-                String name = (stopPointNames == null || stopPointNames.isEmpty()) ? "?" : stopPointNames.get(0).getValue();
-                if (isDepartingStop(subscription, stopPointRef)) {
-                    result.append(" from ").append(name);
-                    ZonedDateTime aimedDepartureTime = estimatedCall.getAimedDepartureTime();
-                    if (aimedDepartureTime != null) {
-                        result.append(" with aimed departure ").append(aimedDepartureTime.format(formatter));
-                    }
-                    if (Boolean.TRUE.equals(estimatedCall.isCancellation())) {
+                //Should not happen, but we could find relevant calls by using the subscriptions to and from lists
+                logger.warn("Expected one or two estimated calls, got {}", estimatedCalls.size());
+            }
+        }
+        //This logic is somewhat naive and not very robust for future changes...
+        if (recordedCall != null) {
+            result.append(" from ").append(getName(recordedCall.getStopPointNames()));
+            String aimedDeparture = recordedCall.getAimedDepartureTime() != null ? recordedCall.getAimedDepartureTime().format(formatter) : null;
+            if (aimedDeparture != null) {
+                result.append(" ").append(aimedDeparture);
+            }
+            if (Boolean.TRUE.equals(recordedCall.isCancellation())) {
+                result.append(" was cancelled");
+            } else {
+                String actualDeparture = recordedCall.getActualDepartureTime() != null ? recordedCall.getActualDepartureTime().format(formatter) : null;
+                if (actualDeparture != null && !actualDeparture.equals(aimedDeparture)) {
+                    result.append(" departed ").append(actualDeparture);
+                }
+            }
+
+        } else if (fromCall != null) {
+            result.append(" from ").append(getName(fromCall.getStopPointNames()));
+            ZonedDateTime aimedDepartureTime = fromCall.getAimedDepartureTime();
+            if (aimedDepartureTime != null) {
+                result.append(" ").append(aimedDepartureTime.format(formatter));
+            }
+            if (Boolean.TRUE.equals(fromCall.isCancellation())) {
+                result.append(" is cancelled");
+            } else {
+                switch (fromCall.getDepartureStatus()) {
+                    case CANCELLED:
                         result.append(" is cancelled");
-                    } else {
-                        switch (estimatedCall.getDepartureStatus()) {
-                            case CANCELLED:
-                                result.append(" is cancelled");
-                                break;
-                            case DELAYED:
-                                result.append(" is delayed");
-                                ZonedDateTime expectedDepartureTime = estimatedCall.getExpectedDepartureTime();
-                                if (expectedDepartureTime != null) {
-                                    result.append(" and expected to depart ").append(expectedDepartureTime.format(formatter));
-                                }
-                                break;
+                        break;
+                    case DELAYED:
+                        result.append(" is delayed");
+                        ZonedDateTime expectedDepartureTime = fromCall.getExpectedDepartureTime();
+                        if (expectedDepartureTime != null) {
+                            result.append(" and expected to depart ").append(expectedDepartureTime.format(formatter));
                         }
-                    }
-                } else {
-                    result.append(" to ").append(name);
-                    ZonedDateTime aimedArrivalTime = estimatedCall.getAimedArrivalTime();
-                    if (aimedArrivalTime != null) {
-                        result.append(" with aimed arrival ").append(aimedArrivalTime.format(formatter));
-                    }
-                    if (Boolean.TRUE.equals(estimatedCall.isCancellation())) {
-                        result.append(" is cancelled");
-                    } else {
-                        switch (estimatedCall.getArrivalStatus()) {
-                            case CANCELLED:
-                                result.append(" is cancelled");
-                                break;
-                            case DELAYED:
-                                result.append(" is delayed");
-                                ZonedDateTime expectedArrivalTime = estimatedCall.getExpectedArrivalTime();
-                                if (expectedArrivalTime != null) {
-                                    result.append(" and expected to arrive ").append(expectedArrivalTime.format(formatter));
-                                }
-                                break;
-                        }
-                    }
+                        break;
                 }
             }
         }
+        if (toCall != null) {
+            result.append(" to ").append(getName(toCall.getStopPointNames()));
+            ZonedDateTime aimedArrivalTime = toCall.getAimedArrivalTime();
+            if (aimedArrivalTime != null) {
+                result.append(" with aimed arrival ").append(aimedArrivalTime.format(formatter));
+            }
+            if (Boolean.TRUE.equals(toCall.isCancellation())) {
+                result.append(" is cancelled");
+            } else {
+                switch (toCall.getArrivalStatus()) {
+                    case CANCELLED:
+                        result.append(" is cancelled");
+                        break;
+                    case DELAYED:
+                        result.append(" is delayed");
+                        ZonedDateTime expectedArrivalTime = toCall.getExpectedArrivalTime();
+                        if (expectedArrivalTime != null) {
+                            result.append(" and expected to arrive ").append(expectedArrivalTime.format(formatter));
+                        }
+                        break;
+                }
+            }
+        }
+
         return result.toString();
     }
 
-    private boolean isDepartingStop(Subscription subscription, StopPointRef stopPointRef) {
-        if (stopPointRef == null) {
-            logger.error("Got null as StopPointRef...");
-        } else if (StringUtils.isBlank(stopPointRef.getValue())) {
-            logger.error("Got empty StopPointRef...");
-        } else {
-            String stop = stopPointRef.getValue().trim();
-            ArrayList<String> fromStopPoints = subscription.getFromStopPoints();
-            for (String fromStopPoint : fromStopPoints) {
-                if (stop.equalsIgnoreCase(StringUtils.trim(fromStopPoint))) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    private String getName(List<NaturalLanguageStringStructure> stopPointNames) {
+        return  (stopPointNames == null || stopPointNames.isEmpty()) ? "?" : stopPointNames.get(0).getValue();
     }
 
-
-    private class SiriNamespaceFilter extends XMLFilterImpl {
-        private static final String NAMESPACE = "http://www.siri.org.uk/siri";
-        @Override
-        public void endElement(String uri, String localName, String qName) throws SAXException {
-            super.endElement(NAMESPACE, localName, qName);
-        }
-        @Override
-        public void startElement(String uri, String localName, String qName, Attributes attributes) throws SAXException {
-            super.startElement(NAMESPACE, localName, qName, attributes);
-        }
-    }
 }
 
 

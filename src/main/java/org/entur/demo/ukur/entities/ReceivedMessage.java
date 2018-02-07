@@ -32,6 +32,9 @@ public class ReceivedMessage {
         this.xmlString = xmlString;
     }
 
+    public ReceivedMessage() {
+    }
+
     public String getXmlString() {
         return xmlString;
     }
