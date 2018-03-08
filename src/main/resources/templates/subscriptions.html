@@ -95,8 +95,7 @@
                 EstimatedVehicleJourney with delays, the entire EstimatedVehicleJourney is pushed after recorded
                 calls and other estimated calls are removed to minimize the message size.</li>
             <li>SX messages: If one of the stops from a subscription is affected by a PtSituationElement, the
-                entire PtSituationElement is pushed after all affects are removed (Note: this causes important information
-                to be lost, and will be fixed in ukur)</li>
+                entire PtSituationElement is pushed after affects not regarding the subscription are removed</li>
         </ul>
     </p>
 

@@ -30,13 +30,17 @@ import static org.entur.demo.ukur.services.MessageService.MAX_SIZE_PER_SUBSCRIPT
 @Controller
 public class MessageController {
 
-    @Autowired
-    private SubscriptionService subscriptionService;
+    private final SubscriptionService subscriptionService;
+
+    private final MessageService messageService;
 
     @Autowired
-    private MessageService messageService;
+    public MessageController(SubscriptionService subscriptionService, MessageService messageService) {
+        this.subscriptionService = subscriptionService;
+        this.messageService = messageService;
+    }
 
-    @RequestMapping(value = "/messages", params = {"id"})
+    @RequestMapping(value = "messages", params = {"id"})
     public String listMessagesForSubscription(Model model, HttpServletRequest req) {
         String id = req.getParameter("id");
         Subscription subscription = subscriptionService.get(id);
@@ -47,7 +51,7 @@ public class MessageController {
         return "messages";
     }
 
-    @RequestMapping(value = "/messages", params = {"delete", "id"})
+    @RequestMapping(value = "messages", params = {"delete", "id"})
     public String removeMessagesForSubscription(Model model, HttpServletRequest req) {
         String id = req.getParameter("id");
         messageService.removeMessages(id);

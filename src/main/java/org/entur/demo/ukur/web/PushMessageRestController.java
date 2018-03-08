@@ -15,13 +15,14 @@
 
 package org.entur.demo.ukur.web;
 
-import org.entur.demo.ukur.entities.PushAcknowledge;
 import org.entur.demo.ukur.entities.Subscription;
 import org.entur.demo.ukur.services.MessageService;
 import org.entur.demo.ukur.services.SubscriptionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import uk.org.siri.siri20.EstimatedVehicleJourney;
 import uk.org.siri.siri20.PtSituationElement;
@@ -31,31 +32,35 @@ public class PushMessageRestController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
+
+    private final SubscriptionService subscriptionService;
 
     @Autowired
-    private SubscriptionService subscriptionService;
+    public PushMessageRestController(MessageService messageService, SubscriptionService subscriptionService) {
+        this.messageService = messageService;
+        this.subscriptionService = subscriptionService;
+    }
 
     @RequestMapping(path = "/push/{pushId}/et", method = RequestMethod.POST,
-            consumes = "application/xml", produces = "text/plain")
-    public String estimatedVehicleJourney(@PathVariable("pushId") String pushId, @RequestBody EstimatedVehicleJourney estimatedVehicleJourney) {
+            consumes = "application/xml")
+    public ResponseEntity estimatedVehicleJourney(@PathVariable("pushId") String pushId, @RequestBody EstimatedVehicleJourney estimatedVehicleJourney) {
         logger.debug("Called with pushId='{}'", pushId);
         return handlePush(pushId, estimatedVehicleJourney, null);
     }
 
     @RequestMapping(path = "/push/{pushId}/sx", method = RequestMethod.POST,
-            consumes = "application/xml", produces = "text/plain")
-    public String ptSituationElement(@PathVariable("pushId") String pushId, @RequestBody PtSituationElement ptSituationElement) {
+            consumes = "application/xml")
+    public ResponseEntity ptSituationElement(@PathVariable("pushId") String pushId, @RequestBody PtSituationElement ptSituationElement) {
         logger.debug("Called with pushId='{}'", pushId);
         return handlePush(pushId, null, ptSituationElement);
     }
 
-    private String handlePush(String pushId, EstimatedVehicleJourney estimatedVehicleJourney, PtSituationElement ptSituationElement) {
+    private ResponseEntity handlePush(String pushId, EstimatedVehicleJourney estimatedVehicleJourney, PtSituationElement ptSituationElement) {
         Subscription subscription = subscriptionService.getByPushId(pushId);
         if (subscription == null) {
-            logger.warn("Received push message for unknown push id '{}' - responds {}", pushId, PushAcknowledge.FORGET_ME);
-            return PushAcknowledge.FORGET_ME.name();
+            logger.warn("Received push message for unknown push id '{}' - responds {}", pushId, HttpStatus.RESET_CONTENT);
+            return new ResponseEntity(HttpStatus.RESET_CONTENT);
         } else {
             if (estimatedVehicleJourney != null) {
                 logger.info("Received new EstimatedVehicleJourney push message for pushId={} and subscriptionId={}", pushId, subscription.getId());
@@ -65,7 +70,7 @@ public class PushMessageRestController {
                 logger.info("Received new PtSituationElement push message for pushId={} and subscriptionId={}", pushId, subscription.getId());
                 messageService.addPushMessage(subscription.getId(), ptSituationElement);
             }
-            return PushAcknowledge.OK.name();
+            return new ResponseEntity(HttpStatus.OK);
         }
     }
 
