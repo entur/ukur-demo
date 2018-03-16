@@ -164,5 +164,10 @@ public class SubscriptionService {
         osloTilAsker.addToStopPoint("NSR:Quay:700");
         add(osloTilAsker);
 
+        Subscription lineL14 = new Subscription();
+        lineL14.setName("Line L14");
+        lineL14.addLineRef("NSB:Line:L14");
+        add(lineL14);
+
     }
 }

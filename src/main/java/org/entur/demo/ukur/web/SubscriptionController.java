@@ -99,4 +99,32 @@ public class SubscriptionController {
         return "subscriptions";
     }
 
+    @RequestMapping(value = "subscriptions", params = {"addLineRef", "lineref_value"})
+    public String addLineRef(Subscription subscription, HttpServletRequest req) {
+        String lineref = req.getParameter("lineref_value");
+        subscription.addLineRef(lineref);
+        return "subscriptions";
+    }
+
+    @RequestMapping(value = "subscriptions", params = {"removeLineRef"})
+    public String removeLineRef(Subscription subscription, HttpServletRequest req) {
+        Integer rowId = Integer.valueOf(req.getParameter("removeLineRef"));
+        subscription.getLineRefs().remove(rowId.intValue());
+        return "subscriptions";
+    }
+
+    @RequestMapping(value = "subscriptions", params = {"addVehicleRef", "vehicleref_value"})
+    public String addVehicleRef(Subscription subscription, HttpServletRequest req) {
+        String vehicleRef = req.getParameter("vehicleref_value");
+        subscription.addVehicleRef(vehicleRef);
+        return "subscriptions";
+    }
+
+    @RequestMapping(value = "subscriptions", params = {"removeVehicleRef"})
+    public String removeVehicleRef(Subscription subscription, HttpServletRequest req) {
+        Integer rowId = Integer.valueOf(req.getParameter("removeVehicleRef"));
+        subscription.getVehicleRefs().remove(rowId.intValue());
+        return "subscriptions";
+    }
+
 }

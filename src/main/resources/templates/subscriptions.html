@@ -41,21 +41,20 @@
         <tr>
             <th>Ids</th>
             <th>Name</th>
-            <th>Message counter</th>
             <th>From stops</th>
             <th>To stops</th>
+            <th>LineRefs</th>
+            <th>VehicleRefs</th>
             <th></th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="s : ${#lists.sort(allSubscriptions)}">
             <td>Subscription id: <span th:text="${s.id}">id</span><br/>
-                push Id: <span th:text="${s.pushId}">pushId</span>
+                push Id: <span th:text="${s.pushId}">pushId</span><br/>
+                <a th:href="@{messages(id=${s.id})}">Messages: <span th:text="${s.numberOfMessages}">0</span></a>
             </td>
             <td th:text="${s.name}">name</td>
-            <td>
-                <a th:href="@{messages(id=${s.id})}" th:text="${s.numberOfMessages}">0</a>
-            </td>
             <td>
                 <table>
                     <tbody>
@@ -75,7 +74,25 @@
                 </table>
             </td>
             <td>
-                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}">Remove subscription</a>
+                <table>
+                    <tbody>
+                    <tr th:each="row : ${#lists.sort(s.lineRefs)}">
+                        <td th:text="${row}">line</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <table>
+                    <tbody>
+                    <tr th:each="row : ${#lists.sort(s.vehicleRefs)}">
+                        <td th:text="${row}">vehicle</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td>
+            <td>
+                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}">Delete</a>
             </td>
         </tr>
         </tbody>
@@ -149,6 +166,54 @@
                             <td><input type="text" name="to_value"/></td>
                             <td>
                                 <button type="submit" name="addTo" class="btn btn-default">Add stop</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">LineRefs</label>
+                <div class="col-sm-10">
+                    <table>
+                        <tbody>
+                        <tr th:each="row,rowStat : *{lineRefs}">
+                            <td>
+                                <input readonly="readonly" type="text" th:field="*{lineRefs[__${rowStat.index}__]}"/>
+                            </td>
+                            <td>
+                                <button type="submit" name="removeLineRef" th:value="${rowStat.index}" class="btn btn-default">Remove LineRef</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="lineref_value"/></td>
+                            <td>
+                                <button type="submit" name="addLineRef" class="btn btn-default">Add LineRef</button>
+                            </td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">VehicleRefs</label>
+                <div class="col-sm-10">
+                    <table>
+                        <tbody>
+                        <tr th:each="row,rowStat : *{vehicleRefs}">
+                            <td>
+                                <input readonly="readonly" type="text" th:field="*{vehicleRefs[__${rowStat.index}__]}"/>
+                            </td>
+                            <td>
+                                <button type="submit" name="removeVehicleRef" th:value="${rowStat.index}" class="btn btn-default">Remove VehicleRef</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><input type="text" name="vehicleref_value"/></td>
+                            <td>
+                                <button type="submit" name="addVehicleRef" class="btn btn-default">Add VehicleRef</button>
                             </td>
                         </tr>
                         </tbody>

@@ -24,9 +24,11 @@ public class Subscription implements Serializable, Comparable {
 
     private String id;
     private String name;
+    private String pushAddress;
     private ArrayList<String> fromStopPoints = new ArrayList<>();
     private ArrayList<String> toStopPoints = new ArrayList<>();
-    private String pushAddress;
+    private ArrayList<String> lineRefs = new ArrayList<>();
+    private ArrayList<String> vehicleRefs = new ArrayList<>();
     @JsonIgnore
     private int numberOfMessages = 0;
     @JsonIgnore
@@ -47,6 +49,22 @@ public class Subscription implements Serializable, Comparable {
 
     public void addToStopPoint(String stopPointRef) {
         toStopPoints.add(stopPointRef);
+    }
+
+    public ArrayList<String> getLineRefs() {
+        return lineRefs;
+    }
+
+    public void addLineRef(String lineRef) {
+        lineRefs.add(lineRef);
+    }
+
+    public ArrayList<String> getVehicleRefs() {
+        return vehicleRefs;
+    }
+
+    public void addVehicleRef(String vehicleRef) {
+        vehicleRefs.add(vehicleRef);
     }
 
     public String getName() {
