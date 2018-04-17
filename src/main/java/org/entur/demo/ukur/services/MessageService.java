@@ -39,7 +39,7 @@ import java.util.List;
 @Service
 public class MessageService {
 
-    public static final int MAX_SIZE_PER_SUBSCRIPTION = 100;
+    public static final int MAX_SIZE_PER_SUBSCRIPTION = 1000;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
     private final JAXBContext jaxbContext;
@@ -89,6 +89,11 @@ public class MessageService {
     public void removeMessages(String id) {
         messageStore.remove(id);
         lastMessageReceived.remove(id);
+    }
+
+    public void clearAll() {
+        messageStore.clear();
+        lastMessageReceived.clear();
     }
 
     private Collection<ReceivedMessage> getReceivedMessages(String subscriptionId) {

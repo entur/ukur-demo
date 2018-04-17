@@ -56,6 +56,14 @@ public class PushMessageRestController {
         return handlePush(pushId, null, ptSituationElement);
     }
 
+
+    @RequestMapping(path = "/clearAllMessages", method = RequestMethod.DELETE)
+    public ResponseEntity clearMessages() {
+        logger.debug("Clears all messages as requested...!");
+        messageService.clearAll();
+        return ResponseEntity.ok("All received messages cleared");
+    }
+
     private ResponseEntity handlePush(String pushId, EstimatedVehicleJourney estimatedVehicleJourney, PtSituationElement ptSituationElement) {
         Subscription subscription = subscriptionService.getByPushId(pushId);
         if (subscription == null) {
