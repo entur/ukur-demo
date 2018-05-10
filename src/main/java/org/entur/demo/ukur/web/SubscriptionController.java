@@ -61,6 +61,7 @@ public class SubscriptionController {
         if (!bindingResult.hasErrors()) {
             this.subscriptionService.add(subscription);
         }
+        subscription.clear(); //since redirects does not work to well we need to clear the add new subscription form
         return "subscriptions";
     }
 
@@ -113,17 +114,17 @@ public class SubscriptionController {
         return "subscriptions";
     }
 
-    @RequestMapping(value = "subscriptions", params = {"addVehicleRef", "vehicleref_value"})
-    public String addVehicleRef(Subscription subscription, HttpServletRequest req) {
-        String vehicleRef = req.getParameter("vehicleref_value");
-        subscription.addVehicleRef(vehicleRef);
+    @RequestMapping(value = "subscriptions", params = {"addCodespace", "codespace_value"})
+    public String addCodespace(Subscription subscription, HttpServletRequest req) {
+        String codespace = req.getParameter("codespace_value");
+        subscription.addCodespace(codespace);
         return "subscriptions";
     }
 
-    @RequestMapping(value = "subscriptions", params = {"removeVehicleRef"})
-    public String removeVehicleRef(Subscription subscription, HttpServletRequest req) {
-        Integer rowId = Integer.valueOf(req.getParameter("removeVehicleRef"));
-        subscription.getVehicleRefs().remove(rowId.intValue());
+    @RequestMapping(value = "subscriptions", params = {"removeCodespace"})
+    public String removeCodespace(Subscription subscription, HttpServletRequest req) {
+        Integer rowId = Integer.valueOf(req.getParameter("removeCodespace"));
+        subscription.getCodespaces().remove(rowId.intValue());
         return "subscriptions";
     }
 

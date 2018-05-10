@@ -31,10 +31,7 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class MessageService {
@@ -83,7 +80,10 @@ public class MessageService {
     }
 
     public Collection<ReceivedMessage> getMessages(String subscriptionId) {
-        return messageStore.getOrDefault(subscriptionId, Collections.emptyList());
+        Collection<ReceivedMessage> messages = messageStore.getOrDefault(subscriptionId, Collections.emptyList());
+        ArrayList<ReceivedMessage> list = new ArrayList<>(messages);
+        list.sort(Comparator.comparing(ReceivedMessage::getReceived).reversed());
+        return list;
     }
 
     public void removeMessages(String id) {

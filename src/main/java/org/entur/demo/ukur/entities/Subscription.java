@@ -28,12 +28,12 @@ public class Subscription implements Serializable, Comparable {
     private ArrayList<String> fromStopPoints = new ArrayList<>();
     private ArrayList<String> toStopPoints = new ArrayList<>();
     private ArrayList<String> lineRefs = new ArrayList<>();
-    private ArrayList<String> vehicleRefs = new ArrayList<>();
+    private ArrayList<String> codespaces = new ArrayList<>();
+    private SubscriptionTypeEnum type = SubscriptionTypeEnum.ALL;
     @JsonIgnore
     private int numberOfMessages = 0;
     @JsonIgnore
     private String pushId;
-
 
     public ArrayList<String> getFromStopPoints() {
         return fromStopPoints;
@@ -59,12 +59,12 @@ public class Subscription implements Serializable, Comparable {
         lineRefs.add(lineRef);
     }
 
-    public ArrayList<String> getVehicleRefs() {
-        return vehicleRefs;
+    public ArrayList<String> getCodespaces() {
+        return codespaces;
     }
 
-    public void addVehicleRef(String vehicleRef) {
-        vehicleRefs.add(vehicleRef);
+    public void addCodespace(String codespace) {
+        codespaces.add(codespace);
     }
 
     public String getName() {
@@ -107,6 +107,14 @@ public class Subscription implements Serializable, Comparable {
         this.pushId = pushId;
     }
 
+    public SubscriptionTypeEnum getType() {
+        return type;
+    }
+
+    public void setType(SubscriptionTypeEnum type) {
+        this.type = type;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -124,5 +132,16 @@ public class Subscription implements Serializable, Comparable {
     public int compareTo(Object o) {
         Subscription that = (Subscription) o;
         return this.pushId.compareTo(that.pushId);
+    }
+
+    public void clear() {
+        id = null;
+        name = null;
+        pushAddress = null;
+        fromStopPoints = new ArrayList<>();
+        toStopPoints = new ArrayList<>();
+        lineRefs = new ArrayList<>();
+        codespaces = new ArrayList<>();
+        type = SubscriptionTypeEnum.ALL;
     }
 }

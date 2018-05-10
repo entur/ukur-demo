@@ -26,11 +26,14 @@
 <body>
 
 <p><a th:href="@{subscriptions}">&lt; Back to Subscriptions</a></p>
-<h2>Messages for subscription "<span th:text="${subscription.name}">name</span>"<small><br/><span th:text="${subscription.id}">id</span></small></h2>
+<h2>Messages for subscription "<span th:text="${subscription.name}">name</span>"
+    <small><br/> id: <span th:text="${subscription.id}">id</span></small>
+    <small><br/> type: <span th:text="${subscription.type}">type</span></small>
+</h2>
 
 <div class="messagelist" th:unless="${#lists.isEmpty(messages)}">
 
-    <p>There are <span th:text="${#lists.size(messages)}">-1</span> messages, the last received <span th:text="${last}">LocalDateTime</span></p>
+    <p>There are <span th:text="${#lists.size(messages)}">-1</span> messages, sorted descending on when they are received</p>
 
     <div th:if="${#lists.size(messages) == MAX}">
         <p>Note: Only <span th:text="${MAX}"/> messages are stored, after that the oldest messages are removed as new ones arrive.</p>

@@ -16,6 +16,7 @@
 package org.entur.demo.ukur.services;
 
 import org.entur.demo.ukur.entities.Subscription;
+import org.entur.demo.ukur.entities.SubscriptionTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -139,7 +140,6 @@ public class SubscriptionService {
         askerOslo2.addToStopPoint("NSR:StopPlace:337");
         add(askerOslo2);
 
-
         Subscription osloTilAsker1 = new Subscription();
         osloTilAsker1.setName("OsloS til Asker #1");
         osloTilAsker1.addFromStopPoint("NSR:StopPlace:337");
@@ -181,6 +181,23 @@ public class SubscriptionService {
         lineL14.setName("Line L14");
         lineL14.addLineRef("NSB:Line:L14");
         add(lineL14);
+
+        Subscription ruterLine1 = new Subscription();
+        ruterLine1.setName("Ruter Line 1");
+        ruterLine1.addLineRef("RUT:Line:1");
+        add(ruterLine1);
+
+        Subscription ruterSX = new Subscription();
+        ruterSX.setType(SubscriptionTypeEnum.SX);
+        ruterSX.setName("All SX from RUT");
+        ruterSX.addCodespace("RUT");
+        add(ruterSX);
+
+        Subscription ruterQASX = new Subscription();
+        ruterQASX.setType(SubscriptionTypeEnum.SX);
+        ruterQASX.setName("All SX from QA-RUT");
+        ruterQASX.addCodespace("QA-RUT");
+        add(ruterQASX);
 
     }
 }
