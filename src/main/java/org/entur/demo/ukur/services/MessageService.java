@@ -60,23 +60,52 @@ public class MessageService {
         return getMessages(subscriptionId).size();
     }
 
-    public void addPushMessage(String subscriptionId, EstimatedVehicleJourney estimatedVehicleJourney) {
+    public void addPushMessage(String subscriptionId, Object receivedPushMessage) {
+        ReceivedMessage message = new ReceivedMessage(toString(receivedPushMessage));
+        if (receivedPushMessage instanceof Siri) {
+            receivedPushMessage = extractPushMessage((Siri)receivedPushMessage);
+        }
+
+        if (receivedPushMessage instanceof EstimatedVehicleJourney) {
+            message.setType(MessageTypeEnum.ET);
+            message.setHumanReadable(makeHumanReadable((EstimatedVehicleJourney) receivedPushMessage));
+        } else if (receivedPushMessage instanceof PtSituationElement) {
+            message.setType(MessageTypeEnum.SX);
+            message.setHumanReadable(makeHumanReadable((PtSituationElement) receivedPushMessage));
+        }
         Collection<ReceivedMessage> pushMessages = getReceivedMessages(subscriptionId);
-        ReceivedMessage message = new ReceivedMessage(toString(estimatedVehicleJourney));
         pushMessages.add(message);
-        message.setType(MessageTypeEnum.ET);
         lastMessageReceived.put(subscriptionId, message.getReceived());
-        message.setEstimatedVehicleJourney(estimatedVehicleJourney);
-        message.setHumanReadable(makeHumanReadable(estimatedVehicleJourney));
     }
 
-    public void addPushMessage(String subscriptionId, PtSituationElement ptSituationElement) {
-        Collection<ReceivedMessage> pushMessages = getReceivedMessages(subscriptionId);
-        ReceivedMessage message = new ReceivedMessage(toString(ptSituationElement));
-        pushMessages.add(message);
-        message.setType(MessageTypeEnum.SX);
-        message.setPtSituationElement(ptSituationElement);
-        message.setHumanReadable(makeHumanReadable(ptSituationElement));
+    private Object extractPushMessage(Siri siri) {
+        ServiceDelivery serviceDelivery = siri.getServiceDelivery();
+        if (serviceDelivery.getSituationExchangeDeliveries().size() == 1) {
+            SituationExchangeDeliveryStructure situationExchangeDeliveryStructure = serviceDelivery.getSituationExchangeDeliveries().get(0);
+            List<PtSituationElement> ptSituationElements = situationExchangeDeliveryStructure.getSituations().getPtSituationElements();
+            if (ptSituationElements.size() != 1) {
+                throw new IllegalArgumentException("Got ptSituationElements.size() PtSituationElements, expects only 1");
+            }
+            return ptSituationElements.get(0);
+        } else if (serviceDelivery.getSituationExchangeDeliveries().size() > 1) {
+            throw new IllegalArgumentException("Got more than one SituationExchangeDelivery");
+        }
+
+        if (serviceDelivery.getEstimatedTimetableDeliveries().size() == 1) {
+            EstimatedTimetableDeliveryStructure estimatedTimetableDeliveryStructure = serviceDelivery.getEstimatedTimetableDeliveries().get(0);
+            if (estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size() != 1) {
+                throw new IllegalArgumentException("Got "+estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size()+" EstimatedVersionFrames, expects only 1");
+            }
+            EstimatedVersionFrameStructure estimatedVersionFrameStructure = estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().get(0);
+            if (estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size() != 1) {
+                throw new IllegalArgumentException("Got "+estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size()+" EstimatedVehicleJourneys, expects only 1");
+            }
+            return estimatedVersionFrameStructure.getEstimatedVehicleJourneies().get(0);
+        } else if (serviceDelivery.getEstimatedTimetableDeliveries().size() > 1) {
+            throw new IllegalArgumentException("Got more than one EstimatedTimetableDelivery");
+        }
+
+        throw new IllegalArgumentException("Requires one PtSituationElement or one EstimatedVehicleJourney, but got none");
     }
 
     public Collection<ReceivedMessage> getMessages(String subscriptionId) {
@@ -104,6 +133,7 @@ public class MessageService {
         try {
             Marshaller marshaller = jaxbContext.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+            marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
             StringWriter writer = new StringWriter();
             marshaller.marshal(siriElement, writer);
             return writer.getBuffer().toString();

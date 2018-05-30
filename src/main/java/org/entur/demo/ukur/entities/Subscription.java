@@ -30,6 +30,7 @@ public class Subscription implements Serializable, Comparable {
     private ArrayList<String> lineRefs = new ArrayList<>();
     private ArrayList<String> codespaces = new ArrayList<>();
     private SubscriptionTypeEnum type = SubscriptionTypeEnum.ALL;
+    private boolean useSiriSubscriptionModel = false;
     @JsonIgnore
     private int numberOfMessages = 0;
     @JsonIgnore
@@ -115,6 +116,14 @@ public class Subscription implements Serializable, Comparable {
         this.type = type;
     }
 
+    public boolean isUseSiriSubscriptionModel() {
+        return useSiriSubscriptionModel;
+    }
+
+    public void setUseSiriSubscriptionModel(boolean useSiriSubscriptionModel) {
+        this.useSiriSubscriptionModel = useSiriSubscriptionModel;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -143,5 +152,6 @@ public class Subscription implements Serializable, Comparable {
         lineRefs = new ArrayList<>();
         codespaces = new ArrayList<>();
         type = SubscriptionTypeEnum.ALL;
+        useSiriSubscriptionModel = false;
     }
 }

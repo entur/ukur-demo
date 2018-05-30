@@ -138,6 +138,7 @@ public class SubscriptionService {
         askerOslo2.setName("Asker-OsloS #2 (kun stopplace)");
         askerOslo2.addFromStopPoint("NSR:StopPlace:418");
         askerOslo2.addToStopPoint("NSR:StopPlace:337");
+        askerOslo2.setUseSiriSubscriptionModel(true);
         add(askerOslo2);
 
         Subscription osloTilAsker1 = new Subscription();
@@ -175,6 +176,7 @@ public class SubscriptionService {
         osloAsker2.setName("OsloS-Asker #2 (kun stopplace)");
         osloAsker2.addFromStopPoint("NSR:StopPlace:337");
         osloAsker2.addToStopPoint("NSR:StopPlace:418");
+        osloAsker2.setUseSiriSubscriptionModel(true);
         add(osloAsker2);
 
         Subscription lineL14 = new Subscription();

@@ -15,17 +15,12 @@
 
 package org.entur.demo.ukur.entities;
 
-import uk.org.siri.siri20.EstimatedVehicleJourney;
-import uk.org.siri.siri20.PtSituationElement;
-
 import java.time.LocalDateTime;
 
 public class ReceivedMessage {
     private String xmlString;
     private MessageTypeEnum type;
     private LocalDateTime received = LocalDateTime.now();
-    private EstimatedVehicleJourney estimatedVehicleJourney;
-    private PtSituationElement ptSituationElement;
     private String humanReadable;
 
     public ReceivedMessage(String xmlString) {
@@ -57,22 +52,6 @@ public class ReceivedMessage {
 
     public void setReceived(LocalDateTime received) {
         this.received = received;
-    }
-
-    public EstimatedVehicleJourney getEstimatedVehicleJourney() {
-        return estimatedVehicleJourney;
-    }
-
-    public void setEstimatedVehicleJourney(EstimatedVehicleJourney estimatedVehicleJourney) {
-        this.estimatedVehicleJourney = estimatedVehicleJourney;
-    }
-
-    public PtSituationElement getPtSituationElement() {
-        return ptSituationElement;
-    }
-
-    public void setPtSituationElement(PtSituationElement ptSituationElement) {
-        this.ptSituationElement = ptSituationElement;
     }
 
     public String getHumanReadable() {

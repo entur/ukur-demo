@@ -58,9 +58,7 @@ public class MessageServiceTest {
         assertEquals(1, messageService.getMessageCount(subscriptionId));
         ReceivedMessage message = messageService.getMessages(subscriptionId).iterator().next();
         assertEquals(MessageTypeEnum.SX, message.getType());
-        assertNotNull(message.getPtSituationElement());
         assertNotNull(message.getXmlString());
-        assertNull(message.getEstimatedVehicleJourney());
     }
 
     @Test
@@ -72,8 +70,6 @@ public class MessageServiceTest {
         assertEquals(1, messageService.getMessageCount(subscriptionId));
         ReceivedMessage message = messageService.getMessages(subscriptionId).iterator().next();
         assertEquals(MessageTypeEnum.ET, message.getType());
-        assertNotNull(message.getEstimatedVehicleJourney());
         assertNotNull(message.getXmlString());
-        assertNull(message.getPtSituationElement());
     }
 }

@@ -29,6 +29,7 @@
 <h2>Messages for subscription "<span th:text="${subscription.name}">name</span>"
     <small><br/> id: <span th:text="${subscription.id}">id</span></small>
     <small><br/> type: <span th:text="${subscription.type}">type</span></small>
+    <small><br/> siri subscription model: <span th:text="${subscription.useSiriSubscriptionModel}">model</span></small>
 </h2>
 
 <div class="messagelist" th:unless="${#lists.isEmpty(messages)}">
