@@ -15,9 +15,12 @@
 
 package org.entur.demo.ukur.entities;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.io.Serializable;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Subscription implements Serializable, Comparable {
@@ -35,6 +38,10 @@ public class Subscription implements Serializable, Comparable {
     private int numberOfMessages = 0;
     @JsonIgnore
     private String pushId;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
+    private String initialTerminationTime;
+    private String heartbeatInterval;
+
 
     public ArrayList<String> getFromStopPoints() {
         return fromStopPoints;
@@ -122,6 +129,26 @@ public class Subscription implements Serializable, Comparable {
 
     public void setUseSiriSubscriptionModel(boolean useSiriSubscriptionModel) {
         this.useSiriSubscriptionModel = useSiriSubscriptionModel;
+    }
+
+    public String getInitialTerminationTime() {
+        return initialTerminationTime;
+    }
+
+    public void setInitialTerminationTime(ZonedDateTime time) {
+        initialTerminationTime = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(time);
+    }
+
+    public void setInitialTerminationTime(String initialTerminationTime) {
+        this.initialTerminationTime = initialTerminationTime;
+    }
+
+    public String getHeartbeatInterval() {
+        return heartbeatInterval;
+    }
+
+    public void setHeartbeatInterval(String heartbeatInterval) {
+        this.heartbeatInterval = heartbeatInterval;
     }
 
     @Override

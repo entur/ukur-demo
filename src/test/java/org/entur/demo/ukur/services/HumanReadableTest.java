@@ -80,7 +80,7 @@ public class HumanReadableTest {
         assertEquals(1, messages.size());
         ReceivedMessage message = messages.iterator().next();
         logger.info(message.getHumanReadable());
-        assertEquals("Line L1 towards Lillestrøm to Oslo S with aimed arrival 10:39 is delayed and expected to arrive 10:44", message.getHumanReadable());
+        assertEquals("NSB:Line:L1 towards Lillestrøm to Oslo S with aimed arrival 10:39:00 is delayed and expected to arrive 10:44:54", message.getHumanReadable());
     }
 
     @Test
@@ -144,7 +144,7 @@ public class HumanReadableTest {
         assertEquals(1, messages.size());
         ReceivedMessage message = messages.iterator().next();
         logger.info(message.getHumanReadable());
-        assertEquals("Line R11 towards Larvik from Oslo S 10:39 is delayed and expected to depart 11:05 to Asker with aimed arrival 10:59 is delayed and expected to arrive 11:21", message.getHumanReadable());
+        assertEquals("NSB:Line:R11 towards Larvik from Oslo S 10:39:00 is delayed and expected to depart 11:05:04 to Asker with aimed arrival 10:59:00 is delayed and expected to arrive 11:21:03", message.getHumanReadable());
     }
 
     @Test
@@ -203,7 +203,7 @@ public class HumanReadableTest {
         assertEquals(1, messages.size());
         ReceivedMessage message = messages.iterator().next();
         logger.info(message.getHumanReadable());
-        assertEquals("Line R10 towards Lillehammer from Asker 10:09 to Oslo S with aimed arrival 10:31 is delayed and expected to arrive 10:48", message.getHumanReadable());
+        assertEquals("NSB:Line:R10 towards Lillehammer from Asker 10:09:00 to Oslo S with aimed arrival 10:31:00 is delayed and expected to arrive 10:48:34", message.getHumanReadable());
     }
 
     @Test

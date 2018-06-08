@@ -16,6 +16,7 @@
 package org.entur.demo.ukur.services;
 
 import com.google.common.collect.EvictingQueue;
+import org.apache.commons.lang3.StringUtils;
 import org.entur.demo.ukur.entities.MessageTypeEnum;
 import org.entur.demo.ukur.entities.ReceivedMessage;
 import org.slf4j.Logger;
@@ -33,12 +34,15 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
+import static uk.org.siri.siri20.CallStatusEnumeration.CANCELLED;
+import static uk.org.siri.siri20.CallStatusEnumeration.DELAYED;
+
 @Service
 public class MessageService {
 
     public static final int MAX_SIZE_PER_SUBSCRIPTION = 100;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
-    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
     private final JAXBContext jaxbContext;
     private HashMap<String, Collection<ReceivedMessage>> messageStore = new HashMap<>();
     private HashMap<String, LocalDateTime> lastMessageReceived = new HashMap<>();
@@ -72,6 +76,12 @@ public class MessageService {
         } else if (receivedPushMessage instanceof PtSituationElement) {
             message.setType(MessageTypeEnum.SX);
             message.setHumanReadable(makeHumanReadable((PtSituationElement) receivedPushMessage));
+        } else if (receivedPushMessage instanceof HeartbeatNotificationStructure) {
+            message.setType(MessageTypeEnum.Heartbeat);
+            message.setHumanReadable("Periodic heartbeat from server according to the subscriptions HeartbeatInterval");
+        } else if (receivedPushMessage instanceof SubscriptionTerminatedNotificationStructure) {
+            message.setType(MessageTypeEnum.Terminated);
+            message.setHumanReadable("Subscription terminated by server due to InitialTerminationTime");
         }
         Collection<ReceivedMessage> pushMessages = getReceivedMessages(subscriptionId);
         pushMessages.add(message);
@@ -80,32 +90,42 @@ public class MessageService {
 
     private Object extractPushMessage(Siri siri) {
         ServiceDelivery serviceDelivery = siri.getServiceDelivery();
-        if (serviceDelivery.getSituationExchangeDeliveries().size() == 1) {
-            SituationExchangeDeliveryStructure situationExchangeDeliveryStructure = serviceDelivery.getSituationExchangeDeliveries().get(0);
-            List<PtSituationElement> ptSituationElements = situationExchangeDeliveryStructure.getSituations().getPtSituationElements();
-            if (ptSituationElements.size() != 1) {
-                throw new IllegalArgumentException("Got ptSituationElements.size() PtSituationElements, expects only 1");
+        if (serviceDelivery != null) {
+            if (serviceDelivery.getSituationExchangeDeliveries().size() == 1) {
+                SituationExchangeDeliveryStructure situationExchangeDeliveryStructure = serviceDelivery.getSituationExchangeDeliveries().get(0);
+                List<PtSituationElement> ptSituationElements = situationExchangeDeliveryStructure.getSituations().getPtSituationElements();
+                if (ptSituationElements.size() != 1) {
+                    throw new IllegalArgumentException("Got ptSituationElements.size() PtSituationElements, expects only 1");
+                }
+                return ptSituationElements.get(0);
+            } else if (serviceDelivery.getSituationExchangeDeliveries().size() > 1) {
+                throw new IllegalArgumentException("Got more than one SituationExchangeDelivery");
             }
-            return ptSituationElements.get(0);
-        } else if (serviceDelivery.getSituationExchangeDeliveries().size() > 1) {
-            throw new IllegalArgumentException("Got more than one SituationExchangeDelivery");
+
+            if (serviceDelivery.getEstimatedTimetableDeliveries().size() == 1) {
+                EstimatedTimetableDeliveryStructure estimatedTimetableDeliveryStructure = serviceDelivery.getEstimatedTimetableDeliveries().get(0);
+                if (estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size() != 1) {
+                    throw new IllegalArgumentException("Got " + estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size() + " EstimatedVersionFrames, expects only 1");
+                }
+                EstimatedVersionFrameStructure estimatedVersionFrameStructure = estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().get(0);
+                if (estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size() != 1) {
+                    throw new IllegalArgumentException("Got " + estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size() + " EstimatedVehicleJourneys, expects only 1");
+                }
+                return estimatedVersionFrameStructure.getEstimatedVehicleJourneies().get(0);
+            } else if (serviceDelivery.getEstimatedTimetableDeliveries().size() > 1) {
+                throw new IllegalArgumentException("Got more than one EstimatedTimetableDelivery");
+            }
         }
 
-        if (serviceDelivery.getEstimatedTimetableDeliveries().size() == 1) {
-            EstimatedTimetableDeliveryStructure estimatedTimetableDeliveryStructure = serviceDelivery.getEstimatedTimetableDeliveries().get(0);
-            if (estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size() != 1) {
-                throw new IllegalArgumentException("Got "+estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().size()+" EstimatedVersionFrames, expects only 1");
-            }
-            EstimatedVersionFrameStructure estimatedVersionFrameStructure = estimatedTimetableDeliveryStructure.getEstimatedJourneyVersionFrames().get(0);
-            if (estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size() != 1) {
-                throw new IllegalArgumentException("Got "+estimatedVersionFrameStructure.getEstimatedVehicleJourneies().size()+" EstimatedVehicleJourneys, expects only 1");
-            }
-            return estimatedVersionFrameStructure.getEstimatedVehicleJourneies().get(0);
-        } else if (serviceDelivery.getEstimatedTimetableDeliveries().size() > 1) {
-            throw new IllegalArgumentException("Got more than one EstimatedTimetableDelivery");
+        if (siri.getHeartbeatNotification() != null) {
+            return siri.getHeartbeatNotification();
         }
 
-        throw new IllegalArgumentException("Requires one PtSituationElement or one EstimatedVehicleJourney, but got none");
+        if (siri.getSubscriptionTerminatedNotification() != null) {
+            return siri.getSubscriptionTerminatedNotification();
+        }
+
+        throw new IllegalArgumentException("Requires one PtSituationElement, one EstimatedVehicleJourney, a HeartbeatNotification or a SubscriptionTerminatedNotification - but got none of them");
     }
 
     public Collection<ReceivedMessage> getMessages(String subscriptionId) {
@@ -145,7 +165,6 @@ public class MessageService {
 
 
     private String makeHumanReadable(PtSituationElement ptSituationElement) {
-        //TODO: Implement properly
         List<DefaultedTextStructure> descriptions = ptSituationElement.getDescriptions();
         if (descriptions == null || descriptions.isEmpty()) {
             return null;
@@ -174,16 +193,10 @@ public class MessageService {
         StringBuilder result = new StringBuilder();
 
         LineRef lineRef = estimatedVehicleJourney.getLineRef();
-        String line = (lineRef == null) ? "null" : lineRef.getValue();
-        if (line.startsWith("NSB:Line:")) {
-            result.append("Line ").append(line.substring(9));
-        } else {
-            result.append(line);
-        }
+        result.append((lineRef == null) ? "Line NULL" : lineRef.getValue());
 
         DirectionRefStructure directionRef = estimatedVehicleJourney.getDirectionRef();
-        if (directionRef != null) {
-            //other providers than BaneNOR has different content in direction so this is not universal...
+        if (directionRef != null && StringUtils.isAlphaSpace(directionRef.getValue())) { //Sometimes direction is only a number and pointless to show
             result.append(" towards ").append(directionRef.getValue());
         }
 
@@ -193,26 +206,33 @@ public class MessageService {
             if (noRecordedCalls == 1) {
                 recordedCall = estimatedVehicleJourney.getRecordedCalls().getRecordedCalls().get(0);
             }
-            if (noRecordedCalls > 1) {
-                //Should not happen, but we could use the subscriptions from-list to find a relevant call...
-                logger.warn("Expected zero or one recorded calls, got {}", noRecordedCalls);
-            }
         }
-
-        EstimatedCall fromCall = null;
-        EstimatedCall toCall = null;
+        boolean addedFromToText = false;
         if (estimatedVehicleJourney.getEstimatedCalls() != null && estimatedVehicleJourney.getEstimatedCalls().getEstimatedCalls() != null) {
             List<EstimatedCall> estimatedCalls = estimatedVehicleJourney.getEstimatedCalls().getEstimatedCalls();
+            EstimatedCall fromCall = null;
+            EstimatedCall toCall = null;
             if (estimatedCalls.size() == 2) {
                 fromCall = estimatedCalls.get(0);
                 toCall = estimatedCalls.get(1);
             } else if (estimatedCalls.size() == 1) {
                 toCall = estimatedCalls.get(0);
-            } else {
-                //Should not happen, but we could find relevant calls by using the subscriptions to and from lists
-                logger.warn("Expected one or two estimated calls, got {}", estimatedCalls.size());
+            }
+            if (toCall != null) {
+                addedFromToText = true;
+                result.append(findFromToText(recordedCall, fromCall, toCall));
             }
         }
+        if (!addedFromToText) {
+            result.append(" has deviations");
+        }
+
+        return result.toString();
+    }
+
+    private String  findFromToText(RecordedCall recordedCall, EstimatedCall fromCall, EstimatedCall toCall) {
+        StringBuilder result = new StringBuilder();
+
         //This logic is somewhat naive and not very robust for future changes...
         if (recordedCall != null) {
             result.append(" from ").append(getName(recordedCall.getStopPointNames()));
@@ -235,48 +255,41 @@ public class MessageService {
             if (aimedDepartureTime != null) {
                 result.append(" ").append(aimedDepartureTime.format(formatter));
             }
-            if (Boolean.TRUE.equals(fromCall.isCancellation())) {
+            if (Boolean.TRUE.equals(fromCall.isCancellation()) || fromCall.getDepartureStatus() == CANCELLED) {
                 result.append(" is cancelled");
-            } else {
-                switch (fromCall.getDepartureStatus()) {
-                    case CANCELLED:
-                        result.append(" is cancelled");
-                        break;
-                    case DELAYED:
-                        result.append(" is delayed");
-                        ZonedDateTime expectedDepartureTime = fromCall.getExpectedDepartureTime();
-                        if (expectedDepartureTime != null) {
-                            result.append(" and expected to depart ").append(expectedDepartureTime.format(formatter));
-                        }
-                        break;
+            } else if (fromCall.getDepartureStatus() == DELAYED || isDelayed(fromCall.getAimedDepartureTime(), fromCall.getExpectedDepartureTime())) {
+                result.append(" is delayed");
+                ZonedDateTime expectedDepartureTime = fromCall.getExpectedDepartureTime();
+                if (expectedDepartureTime != null) {
+                    result.append(" and expected to depart ").append(expectedDepartureTime.format(formatter));
                 }
             }
         }
+
         if (toCall != null) {
             result.append(" to ").append(getName(toCall.getStopPointNames()));
             ZonedDateTime aimedArrivalTime = toCall.getAimedArrivalTime();
             if (aimedArrivalTime != null) {
                 result.append(" with aimed arrival ").append(aimedArrivalTime.format(formatter));
             }
-            if (Boolean.TRUE.equals(toCall.isCancellation())) {
+            if (Boolean.TRUE.equals(toCall.isCancellation()) || toCall.getArrivalStatus() == CANCELLED) {
                 result.append(" is cancelled");
-            } else {
-                switch (toCall.getArrivalStatus()) {
-                    case CANCELLED:
-                        result.append(" is cancelled");
-                        break;
-                    case DELAYED:
-                        result.append(" is delayed");
-                        ZonedDateTime expectedArrivalTime = toCall.getExpectedArrivalTime();
-                        if (expectedArrivalTime != null) {
-                            result.append(" and expected to arrive ").append(expectedArrivalTime.format(formatter));
-                        }
-                        break;
+            } else if(toCall.getArrivalStatus() == DELAYED || isDelayed(fromCall.getAimedArrivalTime(), fromCall.getExpectedArrivalTime())) {
+                result.append(" is delayed");
+                ZonedDateTime expectedArrivalTime = toCall.getExpectedArrivalTime();
+                if (expectedArrivalTime != null) {
+                    result.append(" and expected to arrive ").append(expectedArrivalTime.format(formatter));
                 }
             }
         }
-
         return result.toString();
+    }
+
+    private boolean isDelayed(ZonedDateTime aimed, ZonedDateTime expected) {
+        if (aimed != null && expected != null) {
+            return expected.isAfter(aimed);
+        }
+        return false;
     }
 
     private String getName(List<NaturalLanguageStringStructure> stopPointNames) {

@@ -104,7 +104,7 @@ public class SubscriptionService {
 
     private void addTestSubscriptions() {
         Subscription askerOslo1 = new Subscription();
-        askerOslo1.setName("Asker til OsloS #1");
+        askerOslo1.setName("Asker-OsloS #1");
         askerOslo1.addFromStopPoint("NSR:StopPlace:418");
         askerOslo1.addFromStopPoint("NSR:Quay:695");
         askerOslo1.addFromStopPoint("NSR:Quay:696");
@@ -135,14 +135,14 @@ public class SubscriptionService {
         add(askerOslo1);
 
         Subscription askerOslo2 = new Subscription();
-        askerOslo2.setName("Asker-OsloS #2 (kun stopplace)");
+        askerOslo2.setName("[SIRI] Asker-OsloS #2 (stopplace only)");
         askerOslo2.addFromStopPoint("NSR:StopPlace:418");
         askerOslo2.addToStopPoint("NSR:StopPlace:337");
         askerOslo2.setUseSiriSubscriptionModel(true);
         add(askerOslo2);
 
         Subscription osloTilAsker1 = new Subscription();
-        osloTilAsker1.setName("OsloS til Asker #1");
+        osloTilAsker1.setName("OsloS-Asker #1");
         osloTilAsker1.addFromStopPoint("NSR:StopPlace:337");
         osloTilAsker1.addFromStopPoint("NSR:Quay:550");
         osloTilAsker1.addFromStopPoint("NSR:Quay:551");
@@ -173,15 +173,18 @@ public class SubscriptionService {
         add(osloTilAsker1);
 
         Subscription osloAsker2 = new Subscription();
-        osloAsker2.setName("OsloS-Asker #2 (kun stopplace)");
+        osloAsker2.setName("[SIRI] OsloS-Asker #2 (stopplace only)");
         osloAsker2.addFromStopPoint("NSR:StopPlace:337");
         osloAsker2.addToStopPoint("NSR:StopPlace:418");
         osloAsker2.setUseSiriSubscriptionModel(true);
+        osloAsker2.setHeartbeatInterval("PT1H");
         add(osloAsker2);
 
         Subscription lineL14 = new Subscription();
-        lineL14.setName("Line L14");
+        lineL14.setName("[SIRI] Line L14 (heartbeats every hour)");
         lineL14.addLineRef("NSB:Line:L14");
+        lineL14.setUseSiriSubscriptionModel(true);
+        lineL14.setHeartbeatInterval("PT1H");
         add(lineL14);
 
         Subscription ruterLine1 = new Subscription();

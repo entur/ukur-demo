@@ -18,5 +18,6 @@ package org.entur.demo.ukur.entities;
 public enum MessageTypeEnum {
     ET,
     SX,
-    UNKNOWN
+    Heartbeat,
+    Terminated
 }
