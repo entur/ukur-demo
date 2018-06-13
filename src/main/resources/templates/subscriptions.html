@@ -19,6 +19,9 @@
     <title>Subscriptions</title>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+    <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 </head>
 <body>
 
@@ -29,7 +32,9 @@
     <p>
         Current active subscriptions from this service to receive push messages on
         deviations in traffic.<br/>
-        Add new ones or look at the push messages received for existing subscriptions.
+        Add new ones or look at the push messages received for existing subscriptions. Click on the &lt;xml/&gt; or {json}
+        buttons to see the the subscriptions in that technical format (and copy+modify to your own needs).<br/>
+        See <a href="https://github.com/entur/ukur">the Ukur documentation</a> for details about how the subscriptions work.
     </p>
     <p>
         This is a <mark>demo service</mark>, not intended for real usage - data is not persisted
@@ -49,7 +54,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="s : ${#lists.sort(allSubscriptions)}">
+        <tr th:each="s,rowStat : ${#lists.sort(allSubscriptions)}">
             <td>Subscription id: <span th:text="${s.id}">id</span><br/>
                 type: <span th:text="${s.type}">type</span><br/>
                 push Id: <span th:text="${s.pushId}">pushId</span><br/>
@@ -93,7 +98,45 @@
                 </table>
             </td>
             <td>
-                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}">Delete</a>
+                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}" class="btn btn-info">Delete</a>
+
+                <br/><br/>
+                <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="modal">&lt;xml/&gt;</a>
+                <div class="modal fade" th:id="|xml${rowStat.index}|" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">XML representation of subscription</h4>
+                            </div>
+                            <div class="modal-body">
+                                <pre lang="xml"><span th:text="${s.toXML()}">xml content</span></pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <br/><br/>
+                <a th:href="|#json${rowStat.index}|" class="btn btn-info" data-toggle="modal">{json}</a>
+                <div class="modal fade" th:id="|json${rowStat.index}|" role="dialog">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                <h4 class="modal-title">JSON representation of subscription</h4>
+                            </div>
+                            <div class="modal-body">
+                                <pre lang="xml"><span th:text="${s.toJSON()}">json content</span></pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </td>
         </tr>
         </tbody>
@@ -111,19 +154,32 @@
         <ul>
             <li>ET messages: If a subscription has one 'From stop' and one 'To stop' affected and in correct order or the journey regards a subscribed LineRef in an
                 EstimatedVehicleJourney with delays/cancellations, the entire EstimatedVehicleJourney is pushed after unsubscribed stops/lines are removed to minimize the message size.
-                Codespaces are not used at the moment for ET messages (but will be used to specify/limit source of the ET messages in the future).</li>
+                If codespace(s) is specified, and not limited by stops/lines, the EstimatedVehicleJourney is pushed if it comes from that codespace (as indicated by DataSource).
+            </li>
             <li>SX messages: If one of the stops or line from a subscription is affected by a PtSituationElement, the
-                entire PtSituationElement is pushed after affects not regarding the subscription are removed. If codespace(s) is specified, if not limited by stops/lines,
-                the PtSituationElement is pushed if it comes from that codespace (as indicated by the participantRef).</li>
+                entire PtSituationElement is pushed after affects not regarding the subscription are removed. If codespace(s) is specified, and not limited by stops/lines,
+                the PtSituationElement is pushed if it comes from that codespace (as indicated by participantRef).
+            </li>
         </ul>
+    </p>
+    <p>
+        This demo application uses json to add and delete subscriptions. There is also a XML format from the SIRI specification
+        that does not support all attributes from the json format.
     </p>
 
     <form class="form-horizontal" id="addSubscription" th:action="@{subscriptions#addSubscription}" th:object="${subscription}" method="post">
+        <ul th:if="${#fields.hasErrors('*')}">
+            <h2 class="bg-danger">Error</h2>
+            <li class="bg-danger" th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>
+        </ul>
         <fieldset>
             <div class="form-group">
                 <label class="control-label col-sm-2">Name</label>
                 <div class="col-sm-10">
-                    <input type="text" th:field="*{name}"/>
+                    <p>
+                        <input type="text" th:field="*{name}" th:errorclass="fieldError"/>
+                        (Not valid/supported when using XML - but required when using json like we do here.)
+                    </p>
                 </div>
             </div>
 
@@ -221,6 +277,38 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Type</label>
+                <div class="col-sm-10">
+                    <select type="text" th:field="*{type}">
+                        <option value="ALL">ALL</option>
+                        <option value="SX">SX</option>
+                        <option value="ET">ET</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">SIRI Subscription Model</label>
+                <div class="col-sm-10">
+                    <p>
+                        <input type="checkbox" th:field="*{useSiriSubscriptionModel}" />
+                        Whether the push messages should be wrapped in a Siri element according to the SIRI specification or simply be root element themself.
+                    </p>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="control-label col-sm-2">Heartbeat Interval</label>
+                <div class="col-sm-10">
+                    <p>
+                        <input type="text" th:field="*{heartbeatInterval}" th:errorclass="fieldError"/>
+                        Must follow the <a href="https://www.w3schools.com/xml/schema_dtypes_date.asp">W3C XML Schema 1.0 Duration format</a>. Ex PT10M is every 10th minute.
+                    </p>
+                </div>
+
             </div>
 
             <div class="form-group">

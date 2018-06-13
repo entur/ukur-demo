@@ -15,6 +15,7 @@
 
 package org.entur.demo.ukur.web;
 
+import org.apache.commons.lang3.StringUtils;
 import org.entur.demo.ukur.entities.Subscription;
 import org.entur.demo.ukur.services.MessageService;
 import org.entur.demo.ukur.services.SubscriptionService;
@@ -22,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -58,11 +60,35 @@ public class SubscriptionController {
 
     @RequestMapping(value = "subscriptions", params = {"save"})
     public String saveSubscription(Subscription subscription, BindingResult bindingResult, Model model) {
+        validate(subscription, bindingResult);
         if (!bindingResult.hasErrors()) {
-            this.subscriptionService.add(subscription);
+            if (this.subscriptionService.add(subscription)) {
+                subscription.clear(); //since redirects does not work to well we need to clear the add new subscription form
+            } else {
+                bindingResult.addError(new ObjectError("subscription", "Could not add subscription to Ukur"));
+            }
         }
-        subscription.clear(); //since redirects does not work to well we need to clear the add new subscription form
         return "subscriptions";
+    }
+
+    private void validate(Subscription subscription, BindingResult bindingResult) {
+        if (!bindingResult.hasErrors()) {
+            if (subscription == null) {
+                //Should not happen....
+                bindingResult.addError(new ObjectError("subscription", "Subscription is null..."));
+            } else {
+                if (StringUtils.isBlank(subscription.getName())) {
+                    bindingResult.addError(new ObjectError("name", "A name is required"));
+                }
+                if (!subscription.validateHeartbeat()) {
+                    bindingResult.addError(new ObjectError("heartbeatInterval", "Illegal heartbeatInterval"));
+                }
+                if (subscription.getCodespaces().isEmpty() && subscription.getLineRefs().isEmpty()
+                        && ( subscription.getFromStopPoints().isEmpty() || subscription.getToStopPoints().isEmpty() ) ) {
+                    bindingResult.addError(new ObjectError("subscription", "No criterias given, must have at least one lineRef or one codespace or a fromStop and a toStop"));
+                }
+            }
+        }
     }
 
     @RequestMapping(value = "subscriptions", params = {"addFrom", "from_value"})

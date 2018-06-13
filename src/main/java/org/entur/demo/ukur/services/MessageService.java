@@ -274,7 +274,7 @@ public class MessageService {
             }
             if (Boolean.TRUE.equals(toCall.isCancellation()) || toCall.getArrivalStatus() == CANCELLED) {
                 result.append(" is cancelled");
-            } else if(toCall.getArrivalStatus() == DELAYED || isDelayed(fromCall.getAimedArrivalTime(), fromCall.getExpectedArrivalTime())) {
+            } else if(toCall.getArrivalStatus() == DELAYED || isDelayed(toCall.getAimedArrivalTime(), toCall.getExpectedArrivalTime())) {
                 result.append(" is delayed");
                 ZonedDateTime expectedArrivalTime = toCall.getExpectedArrivalTime();
                 if (expectedArrivalTime != null) {

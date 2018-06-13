@@ -71,7 +71,7 @@ public class SubscriptionService {
         return subscriptions.get(id);
     }
 
-    public void add(final Subscription subscription) {
+    public boolean add(final Subscription subscription) {
         RestTemplate restTemplate = new RestTemplate();
         try {
             URI url = URI.create(ukurURL);
@@ -81,9 +81,11 @@ public class SubscriptionService {
             logger.info("Added subscription at Ukur, received subscription id {}", returnedSubscription.getId());
             returnedSubscription.setPushId(pushId); //not part of Ukur's subscription
             subscriptions.put(pushId, returnedSubscription); //uses returned subscription since it is normalized
+            return true;
         } catch (Exception e) {
             logger.error("Could not add new subscription", e);
         }
+        return false;
     }
 
     public void remove(String id) {

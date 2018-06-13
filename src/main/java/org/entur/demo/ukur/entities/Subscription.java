@@ -17,13 +17,27 @@ package org.entur.demo.ukur.entities;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import uk.org.siri.siri20.*;
 
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.datatype.DatatypeFactory;
 import java.io.Serializable;
+import java.io.StringWriter;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
+import java.util.Objects;
 
 public class Subscription implements Serializable, Comparable {
+
+    @JsonIgnore
+    private static final Logger logger = LoggerFactory.getLogger(Subscription.class);
 
     private String id;
     private String name;
@@ -40,8 +54,13 @@ public class Subscription implements Serializable, Comparable {
     private String pushId;
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private String initialTerminationTime;
-    private String heartbeatInterval;
-
+    private String heartbeatInterval = null;
+    @JsonIgnore
+    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    @JsonIgnore
+    private String xmlCache; //Used to cache the xml representation (works since we don't support updates)
+    @JsonIgnore
+    private String jsonCache; //Used to cache the jsonCache representation (works since we don't support updates)
 
     public ArrayList<String> getFromStopPoints() {
         return fromStopPoints;
@@ -135,8 +154,16 @@ public class Subscription implements Serializable, Comparable {
         return initialTerminationTime;
     }
 
+    public ZonedDateTime convertInitialTerminationTime() {
+        if (initialTerminationTime != null) {
+            TemporalAccessor parse = dateTimeFormatter.parse(initialTerminationTime);
+            return ZonedDateTime.from(parse);
+        }
+        return null;
+    }
+
     public void setInitialTerminationTime(ZonedDateTime time) {
-        initialTerminationTime = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(time);
+        initialTerminationTime = dateTimeFormatter.format(time);
     }
 
     public void setInitialTerminationTime(String initialTerminationTime) {
@@ -180,5 +207,138 @@ public class Subscription implements Serializable, Comparable {
         codespaces = new ArrayList<>();
         type = SubscriptionTypeEnum.ALL;
         useSiriSubscriptionModel = false;
+    }
+
+    public String toJSON() {
+        if (jsonCache == null) {
+            logger.debug("calculates json ({})", name);
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                jsonCache = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
+            } catch (Exception e) {
+                logger.error("Could not generate JSON", e);
+                jsonCache = "Error";
+            }
+        }
+        return jsonCache;
+    }
+
+    public String toXML() {
+        if (xmlCache == null) {
+            logger.debug("calculates xml ({})", name);
+            try {
+
+                //Generic part
+                RequestorRef requestorRef = new RequestorRef();
+                requestorRef.setValue("CLIENT-SPECIFIED-REQUESTOR_REF"); //TODO: store somewhere on subscription
+                SubscriptionRequest request = new SubscriptionRequest();
+                request.setRequestorRef(requestorRef);
+                ZonedDateTime now = ZonedDateTime.now();
+                request.setRequestTimestamp(now);
+                request.setAddress(pushAddress);
+
+                if (heartbeatInterval != null) {
+                    DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
+                    SubscriptionContextStructure ctx = new SubscriptionContextStructure();
+                    ctx.setHeartbeatInterval(datatypeFactory.newDuration(heartbeatInterval));
+                    request.setSubscriptionContext(ctx);
+                }
+
+                //The XSD allows only one of SituationExchangeRequestStructure/EstimatedTimetableRequestStructure...!
+
+                if (type == SubscriptionTypeEnum.ALL || type == SubscriptionTypeEnum.SX) {
+                    //SX subscription part
+                    SituationExchangeRequestStructure sxRequest = new SituationExchangeRequestStructure();
+                    sxRequest.setRequestTimestamp(now);
+                    if (lineRefs != null && !lineRefs.isEmpty()) {
+                        for (String ref : lineRefs) {
+                            LineRef lineRef = new LineRef();
+                            lineRef.setValue(ref);
+                            sxRequest.getLineReves().add(lineRef);
+                        }
+                    }
+                    SituationExchangeSubscriptionStructure sxSubscriptionReq = new SituationExchangeSubscriptionStructure();
+                    sxSubscriptionReq.setSituationExchangeRequest(sxRequest);
+                    SubscriptionQualifierStructure sxSubscriptionIdentifier = new SubscriptionQualifierStructure();
+                    sxSubscriptionIdentifier.setValue("CLIENT-SPECIFIED-SUBSCRIPTION_ID_1");//TODO: store somewhere on subscription
+                    sxSubscriptionReq.setSubscriptionIdentifier(sxSubscriptionIdentifier);
+                    sxSubscriptionReq.setInitialTerminationTime(convertInitialTerminationTime());
+                    request.getSituationExchangeSubscriptionRequests().add(sxSubscriptionReq);
+                }
+
+                if (type == SubscriptionTypeEnum.ALL || type == SubscriptionTypeEnum.ET) {
+                    //ET subscription part
+                    EstimatedTimetableRequestStructure etRequest = new EstimatedTimetableRequestStructure();
+                    etRequest.setRequestTimestamp(now);
+                    if (lineRefs != null && !lineRefs.isEmpty()) {
+                        EstimatedTimetableRequestStructure.Lines lines = new EstimatedTimetableRequestStructure.Lines();
+                        for (String ref : lineRefs) {
+                            LineRef lineRef = new LineRef();
+                            lineRef.setValue(ref);
+                            LineDirectionStructure line = new LineDirectionStructure();
+                            line.setLineRef(lineRef);
+                            lines.getLineDirections().add(line);
+                        }
+                        etRequest.setLines(lines);
+                    }
+                    EstimatedTimetableSubscriptionStructure etSubscriptionReq = new EstimatedTimetableSubscriptionStructure();
+                    etSubscriptionReq.setEstimatedTimetableRequest(etRequest);
+                    SubscriptionQualifierStructure etSubscriptionIdentifier = new SubscriptionQualifierStructure();
+                    etSubscriptionIdentifier.setValue("CLIENT-SPECIFIED-SUBSCRIPTION_ID_2"); //TODO: store somewhere on subscription
+                    etSubscriptionReq.setSubscriptionIdentifier(etSubscriptionIdentifier);
+                    etSubscriptionReq.setInitialTerminationTime(convertInitialTerminationTime());
+                    request.getEstimatedTimetableSubscriptionRequests().add(etSubscriptionReq);
+                }
+
+                Siri siri = new Siri();
+                siri.setVersion("2.0");
+                siri.setSubscriptionRequest(request);
+
+                JAXBContext jaxbContext = JAXBContext.newInstance(Siri.class);
+                Marshaller marshaller = jaxbContext.createMarshaller();
+                marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+                marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+                StringWriter writer = new StringWriter();
+                marshaller.marshal(siri, writer);
+                StringBuilder sb = new StringBuilder();
+                if (type == SubscriptionTypeEnum.ALL) {
+                    sb.append("<!-- The SIRI XSD only allows one of SituationExchangeSubscriptionRequest or EstimatedTimetableSubscriptionRequest, not both like this sample. -->\n");
+                    sb.append("<!-- Also make sure the CLIENT-SPECIFIED-SUBSCRIPTION_ID's is not already used, else the existing subscription is overwritten.                 -->\n");
+                    sb.append("<!-- Subscriptions are identified with the combination of RequestorRef and the SubscriptionIdentifier.                                         -->\n");
+                }
+                if (!fromStopPoints.isEmpty() || !toStopPoints.isEmpty()) {
+                    sb.append("<!-- This subscription has from-/toStops. That is not supported by the SIRI XSD and not visible below.                                         -->\n");
+                }
+                if (!codespaces.isEmpty()) {
+                    sb.append("<!-- The subscription has codespace, that is not directly supported by the SIRI XSD. Add the codespace to the request path to support one.     -->\n");
+                    if (codespaces.size() > 1) {
+                        sb.append("<!-- Only one codespace is supported by each SIRI subscription due to the path trick (you can have many subscriptions!).                       -->\n");
+                    }
+                }
+                String xml = writer.getBuffer().toString();
+                xml = xml.substring(xml.indexOf("\n"), xml.length());
+                sb.append("<!-- The requestor/client must provide values prefixed with 'CLIENT-SPECIFIED-'.                                                               -->\n");
+                sb.append("<!-- Make sure the CLIENT-SPECIFIED-SUBSCRIPTION_ID's is not already used, else the existing subscription is overwritten.                      -->\n");
+                sb.append("<Siri version=\"2.0\" xmlns=\"http://www.siri.org.uk/siri\">"); //removes unused namespaces somewhat brutal...
+                sb.append(xml);
+                xmlCache = sb.toString();
+            } catch (Exception e) {
+                logger.error("Could not generate XML", e);
+                xmlCache = "Error";
+            }
+        }
+        return xmlCache;
+    }
+
+    public boolean validateHeartbeat() {
+        if (StringUtils.isNotBlank(heartbeatInterval)) {
+            try {
+                DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
+                datatypeFactory.newDuration(heartbeatInterval);
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        return true;
     }
 }
