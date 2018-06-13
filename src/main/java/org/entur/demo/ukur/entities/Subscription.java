@@ -318,7 +318,6 @@ public class Subscription implements Serializable, Comparable {
                 String xml = writer.getBuffer().toString();
                 xml = xml.substring(xml.indexOf("\n"), xml.length());
                 sb.append("<!-- The requestor/client must provide values prefixed with 'CLIENT-SPECIFIED-'.                                                               -->\n");
-                sb.append("<!-- Make sure the CLIENT-SPECIFIED-SUBSCRIPTION_ID's is not already used, else the existing subscription is overwritten.                      -->\n");
                 sb.append("<Siri version=\"2.0\" xmlns=\"http://www.siri.org.uk/siri\">"); //removes unused namespaces somewhat brutal...
                 sb.append(xml);
                 xmlCache = sb.toString();
