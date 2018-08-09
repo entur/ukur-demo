@@ -48,6 +48,7 @@ public class Subscription implements Serializable, Comparable {
     private ArrayList<String> codespaces = new ArrayList<>();
     private SubscriptionTypeEnum type = SubscriptionTypeEnum.ALL;
     private boolean useSiriSubscriptionModel = false;
+    private boolean pushAllData = false;
     @JsonIgnore
     private int numberOfMessages = 0;
     @JsonIgnore
@@ -176,6 +177,14 @@ public class Subscription implements Serializable, Comparable {
 
     public void setHeartbeatInterval(String heartbeatInterval) {
         this.heartbeatInterval = heartbeatInterval;
+    }
+
+    public boolean isPushAllData() {
+        return pushAllData;
+    }
+
+    public void setPushAllData(boolean pushAllData) {
+        this.pushAllData = pushAllData;
     }
 
     @Override

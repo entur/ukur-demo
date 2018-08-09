@@ -206,5 +206,13 @@ public class SubscriptionService {
         ruterQASX.addCodespace("QA-RUT");
         add(ruterQASX);
 
+        Subscription osloAskerAllData = new Subscription();
+        osloAskerAllData.setName("[SIRI|AllData] OsloS-Asker #3 (stopplace only)");
+        osloAskerAllData.addFromStopPoint("NSR:StopPlace:337");
+        osloAskerAllData.addToStopPoint("NSR:StopPlace:418");
+        osloAskerAllData.setUseSiriSubscriptionModel(true);
+        osloAskerAllData.setPushAllData(true);
+        add(osloAskerAllData);
+
     }
 }
