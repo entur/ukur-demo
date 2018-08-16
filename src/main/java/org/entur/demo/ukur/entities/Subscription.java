@@ -216,6 +216,7 @@ public class Subscription implements Serializable, Comparable {
         codespaces = new ArrayList<>();
         type = SubscriptionTypeEnum.ALL;
         useSiriSubscriptionModel = false;
+        pushAllData = false;
     }
 
     public String toJSON() {

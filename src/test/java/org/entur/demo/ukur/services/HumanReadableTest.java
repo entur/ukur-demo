@@ -111,6 +111,10 @@ public class HumanReadableTest {
                 "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>5</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
+                "            <ArrivalStopAssignment>\n" +
+                "                <AimedQuayRef>NSR:Quay:559</AimedQuayRef>\n" +
+                "                <ExpectedQuayRef>NSR:Quay:559</ExpectedQuayRef>\n" +
+                "            </ArrivalStopAssignment>\n" +
                 "            <AimedDepartureTime>2018-02-07T10:39:00+01:00</AimedDepartureTime>\n" +
                 "            <ExpectedDepartureTime>2018-02-07T11:05:04+01:00</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>delayed</DepartureStatus>\n" +
@@ -129,6 +133,10 @@ public class HumanReadableTest {
                 "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>1</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
+                "            <ArrivalStopAssignment>\n" +
+                "                <AimedQuayRef>NSR:Quay:698</AimedQuayRef>\n" +
+                "                <ExpectedQuayRef>NSR:Quay:698</ExpectedQuayRef>\n" +
+                "            </ArrivalStopAssignment>\n" +
                 "            <AimedDepartureTime>2018-02-07T11:00:00+01:00</AimedDepartureTime>\n" +
                 "            <ExpectedDepartureTime>2018-02-07T11:21:33+01:00</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>delayed</DepartureStatus>\n" +
@@ -145,6 +153,78 @@ public class HumanReadableTest {
         ReceivedMessage message = messages.iterator().next();
         logger.info(message.getHumanReadable());
         assertEquals("NSB:Line:R11 towards Larvik from Oslo S 10:39:00 is delayed and expected to depart 11:05:04 to Asker with aimed arrival 10:59:00 is delayed and expected to arrive 11:21:03", message.getHumanReadable());
+    }
+
+    @Test
+    public void testTrackChange() throws JAXBException {
+        String subscriptionId = UUID.randomUUID().toString();
+        Subscription subscription = new Subscription();
+        subscription.addFromStopPoint("NSR:Quay:555");
+        messageService.addPushMessage(subscriptionId, getEtMessage("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
+                "<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\" xmlns:ns2=\"http://www.ifopt.org.uk/acsb\" xmlns:ns4=\"http://datex2.eu/schema/2_0RC1/2_0\" xmlns:ns3=\"http://www.ifopt.org.uk/ifopt\">\n" +
+                "    <LineRef>NSB:Line:R11</LineRef>\n" +
+                "    <DirectionRef>Larvik</DirectionRef>\n" +
+                "    <DatedVehicleJourneyRef>813:2018-02-07</DatedVehicleJourneyRef>\n" +
+                "    <VehicleMode>rail</VehicleMode>\n" +
+                "    <OriginName>Eidsvoll</OriginName>\n" +
+                "    <OriginShortName>EVL</OriginShortName>\n" +
+                "    <OperatorRef>NSB</OperatorRef>\n" +
+                "    <ProductCategoryRef>IC</ProductCategoryRef>\n" +
+                "    <ServiceFeatureRef>passengerTrain</ServiceFeatureRef>\n" +
+                "    <VehicleRef>813</VehicleRef>\n" +
+                "    <RecordedCalls/>\n" +
+                "    <EstimatedCalls>\n" +
+                "        <EstimatedCall>\n" +
+                "            <StopPointRef>NSR:Quay:559</StopPointRef>\n" +
+                "            <StopPointName>Oslo S</StopPointName>\n" +
+                "            <RequestStop>false</RequestStop>\n" +
+                "            <AimedArrivalTime>2018-02-07T10:36:00+01:00</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>2018-02-07T10:36:00+01:00</ExpectedArrivalTime>\n" +
+                "            <ArrivalStatus>onTime</ArrivalStatus>\n" +
+                "            <ArrivalPlatformName>5</ArrivalPlatformName>\n" +
+                "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
+                "            <ArrivalStopAssignment>\n" +
+                "                <AimedQuayRef>NSR:Quay:558</AimedQuayRef>\n" +
+                "                <ExpectedQuayRef>NSR:Quay:559</ExpectedQuayRef>\n" +
+                "            </ArrivalStopAssignment>\n" +
+                "            <AimedDepartureTime>2018-02-07T10:39:00+01:00</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>2018-02-07T10:39:00+01:00</ExpectedDepartureTime>\n" +
+                "            <DepartureStatus>onTime</DepartureStatus>\n" +
+                "            <DeparturePlatformName>5</DeparturePlatformName>\n" +
+                "            <DepartureBoardingActivity>boarding</DepartureBoardingActivity>\n" +
+                "            <Extensions>\n" +
+                "                <StopsAtAirport>true</StopsAtAirport>\n" +
+                "            </Extensions>\n" +
+                "        </EstimatedCall>\n" +
+                "        <EstimatedCall>\n" +
+                "            <StopPointRef>NSR:Quay:698</StopPointRef>\n" +
+                "            <StopPointName>Asker</StopPointName>\n" +
+                "            <RequestStop>false</RequestStop>\n" +
+                "            <AimedArrivalTime>2018-02-07T10:59:00+01:00</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>2018-02-07T10:59:00+01:00</ExpectedArrivalTime>\n" +
+                "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
+                "            <ArrivalPlatformName>1</ArrivalPlatformName>\n" +
+                "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
+                "            <ArrivalStopAssignment>\n" +
+                "                <AimedQuayRef>NSR:Quay:697</AimedQuayRef>\n" +
+                "                <ExpectedQuayRef>NSR:Quay:698</ExpectedQuayRef>\n" +
+                "            </ArrivalStopAssignment>\n" +
+                "            <AimedDepartureTime>2018-02-07T11:00:00+01:00</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>2018-02-07TT11:00:00+01:00</ExpectedDepartureTime>\n" +
+                "            <DepartureStatus>delayed</DepartureStatus>\n" +
+                "            <DeparturePlatformName>1</DeparturePlatformName>\n" +
+                "            <DepartureBoardingActivity>boarding</DepartureBoardingActivity>\n" +
+                "            <Extensions>\n" +
+                "                <StopsAtAirport>true</StopsAtAirport>\n" +
+                "            </Extensions>\n" +
+                "        </EstimatedCall>\n" +
+                "    </EstimatedCalls>\n" +
+                "</EstimatedVehicleJourney>"));
+        Collection<ReceivedMessage> messages = messageService.getMessages(subscriptionId);
+        assertEquals(1, messages.size());
+        ReceivedMessage message = messages.iterator().next();
+        logger.info(message.getHumanReadable());
+        assertEquals("NSB:Line:R11 towards Larvik from Oslo S 10:39:00 is on time with new track platform 5 to Asker with aimed arrival 10:59:00 is delayed and expected to arrive 10:59:00 with new track platform 1", message.getHumanReadable());
     }
 
     @Test
@@ -189,6 +269,10 @@ public class HumanReadableTest {
                 "            <ArrivalPlatformName>11</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
                 "            <AimedDepartureTime>2018-02-07T10:34:00+01:00</AimedDepartureTime>\n" +
+                "            <ArrivalStopAssignment>\n" +
+                "                <AimedQuayRef>NSR:Quay:571</AimedQuayRef>\n" +
+                "                <ExpectedQuayRef>NSR:Quay:571</ExpectedQuayRef>\n" +
+                "            </ArrivalStopAssignment>\n" +
                 "            <ExpectedDepartureTime>2018-02-07T10:49:04+01:00</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>delayed</DepartureStatus>\n" +
                 "            <DeparturePlatformName>11</DeparturePlatformName>\n" +

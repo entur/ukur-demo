@@ -263,7 +263,10 @@ public class MessageService {
                 if (expectedDepartureTime != null) {
                     result.append(" and expected to depart ").append(expectedDepartureTime.format(formatter));
                 }
+            } else {
+                result.append(" is on time");
             }
+            appendAnyTrackChange(result, fromCall);
         }
 
         if (toCall != null) {
@@ -281,8 +284,35 @@ public class MessageService {
                     result.append(" and expected to arrive ").append(expectedArrivalTime.format(formatter));
                 }
             }
+            appendAnyTrackChange(result, toCall);
         }
         return result.toString();
+    }
+
+    private void appendAnyTrackChange(StringBuilder result, EstimatedCall call) {
+        StopAssignmentStructure stopAssignment = call.getArrivalStopAssignment();
+        if (stopAssignment == null) {
+            stopAssignment = call.getDepartureStopAssignment();
+        }
+        if (stopAssignment != null && stopAssignment.getAimedQuayRef() != null && stopAssignment.getExpectedQuayRef() != null) {
+            String aimed = stopAssignment.getAimedQuayRef().getValue();
+            String expected = stopAssignment.getExpectedQuayRef().getValue();
+            if (StringUtils.isNotBlank(aimed) && !StringUtils.equals(aimed, expected)) {
+                result.append(" with new track ");
+                String platformName = getPlatformName(call);
+                if (StringUtils.isNotBlank(platformName)) {
+                        result.append("platform ").append(platformName);
+                } else {
+                    result.append(expected);
+                }
+            }
+        }
+    }
+
+    private String getPlatformName(EstimatedCall call) {
+        if (call.getArrivalPlatformName() != null) return call.getArrivalPlatformName().getValue();
+        if (call.getDeparturePlatformName() != null) return call.getDeparturePlatformName().getValue();
+        return null;
     }
 
     private boolean isDelayed(ZonedDateTime aimed, ZonedDateTime expected) {
