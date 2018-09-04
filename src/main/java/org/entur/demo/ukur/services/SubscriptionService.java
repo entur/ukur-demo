@@ -24,9 +24,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.*;
 
 @Service
 public class SubscriptionService {
@@ -49,7 +47,17 @@ public class SubscriptionService {
         if (!pushURL.endsWith("/")) {
             this.pushURL = pushURL + "/";
         }
-        addTestSubscriptions();
+        int delay = 20;
+        logger.info("Delays addition of test subscriptions by {} seconds", delay);
+        new Timer().schedule(
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        logger.info("Adds test subscriptions after {} seconds", delay);
+                        addTestSubscriptions();
+                    }
+                },
+                delay*1000);
     }
 
     public Collection<Subscription> list() {
