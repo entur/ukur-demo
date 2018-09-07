@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 import static uk.org.siri.siri20.CallStatusEnumeration.CANCELLED;
@@ -67,7 +68,14 @@ public class MessageService {
     public void addPushMessage(String subscriptionId, Object receivedPushMessage) {
         ReceivedMessage message = new ReceivedMessage(toString(receivedPushMessage));
         if (receivedPushMessage instanceof Siri) {
-            receivedPushMessage = extractPushMessage((Siri)receivedPushMessage);
+            Siri siri = (Siri) receivedPushMessage;
+            receivedPushMessage = extractPushMessage(siri);
+            if (siri.getServiceDelivery() != null && siri.getServiceDelivery().getResponseTimestamp() != null) {
+                ZonedDateTime responseTimestamp = siri.getServiceDelivery().getResponseTimestamp();
+                long delay = ChronoUnit.MILLIS.between(responseTimestamp, ZonedDateTime.now());
+                logger.info("siri message delay: {} ms", delay);
+                message.setDeliveryDelay(delay);
+            }
         }
 
         if (receivedPushMessage instanceof EstimatedVehicleJourney) {

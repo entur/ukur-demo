@@ -56,6 +56,7 @@
             <td> <span th:text="${m.getHumanReadable()}">Blabla bla blabla blabla bla</span>
                 <br/>
                 <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="collapse">expand/collapse xml</a>
+                <span th:if="${m.deliveryDelay}" th:text="| Since Anshar timestamp: ${m.deliveryDelay}|">0:0:0</span>
                 <pre th:id="|xml${rowStat.index}|" class="prettyprint collapse" th:text="${m.getXmlString()}">content</pre>
             </td>
         </tr>

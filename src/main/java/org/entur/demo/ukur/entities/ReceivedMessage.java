@@ -22,6 +22,7 @@ public class ReceivedMessage {
     private MessageTypeEnum type;
     private LocalDateTime received = LocalDateTime.now();
     private String humanReadable;
+    private String delay = null;
 
     public ReceivedMessage(String xmlString) {
         this.xmlString = xmlString;
@@ -61,4 +62,16 @@ public class ReceivedMessage {
     public void setHumanReadable(String humanReadable) {
         this.humanReadable = humanReadable;
     }
+
+    public void setDeliveryDelay(long milliseconds) {
+        long millis = milliseconds % 1000;
+        long seconds = (milliseconds / 1000) % 60;
+        long minutes = (milliseconds / 1000) / 60;
+        delay = String.format("%d:%d,%03d", minutes, seconds, millis);
+    }
+
+    public String getDeliveryDelay() {
+        return delay;
+    }
+
 }
