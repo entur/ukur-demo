@@ -31,49 +31,47 @@
     </licenses>
 
     <properties>
-        <spring.version>1.5.9.RELEASE</spring.version>
         <docker.maven.plugin.version>0.21.0</docker.maven.plugin.version>
-        <fabric8.version>2.3.7</fabric8.version>
         <docker.from>eu.gcr.io/carbon-1287/java-base-image</docker.from>
         <fabric8.dockerUser>carbon-1287/</fabric8.dockerUser>
         <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
         <docker.cleanup>none</docker.cleanup>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <!-- Import dependency management from Spring Boot -->
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.fabric8</groupId>
-                <artifactId>fabric8-project</artifactId>
-                <version>${fabric8.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.0.5.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
 
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-thymeleaf</artifactId>
-            <version>${spring.version}</version>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-            <dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jetty</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-thymeleaf</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-java8time</artifactId>
         </dependency>
         <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>4.7</version>
+            <version>5.2</version>
         </dependency>
         <dependency>
             <groupId>org.entur</groupId>
@@ -83,11 +81,12 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
+            <version>26.0-jre</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-            <version>3.0</version>
+            <version>3.8</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
@@ -119,35 +118,14 @@
                     <target>1.8</target>
                 </configuration>
             </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.version}</version>
                 <executions>
                     <execution>
                         <goals>
                             <goal>repackage</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>fabric8-maven-plugin</artifactId>
-                <version>${fabric8.version}</version>
-                <executions>
-                    <execution>
-                        <id>json</id>
-                        <phase>generate-resources</phase>
-                        <goals>
-                            <goal>json</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>attach</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>attach</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -187,7 +165,7 @@
                 <fabric8.recreate>true</fabric8.recreate>
             </properties>
             <build>
-                <defaultGoal>clean install docker:build docker:push fabric8:json</defaultGoal>
+                <defaultGoal>clean install docker:build docker:push</defaultGoal>
             </build>
         </profile>
     </profiles>
