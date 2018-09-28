@@ -86,9 +86,13 @@ public class SubscriptionService {
             String pushId = basePushId + idCounter++;
             subscription.setPushAddress(pushURL+pushId);
             Subscription returnedSubscription = restTemplate.postForObject(url, subscription, Subscription.class);
-            logger.info("Added subscription at Ukur, received subscription id {}", returnedSubscription.getId());
-            returnedSubscription.setPushId(pushId); //not part of Ukur's subscription
-            subscriptions.put(pushId, returnedSubscription); //uses returned subscription since it is normalized
+            if (returnedSubscription == null) {
+                logger.error("Adding subscription failed...");
+            } else {
+                logger.info("Added subscription at Ukur, received subscription id {}", returnedSubscription.getId());
+                returnedSubscription.setPushId(pushId); //not part of Ukur's subscription
+                subscriptions.put(pushId, returnedSubscription); //uses returned subscription since it is normalized
+            }
             return true;
         } catch (Exception e) {
             logger.error("Could not add new subscription", e);
