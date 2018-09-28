@@ -16,6 +16,7 @@
 package org.entur.demo.ukur.services;
 
 import com.google.common.collect.EvictingQueue;
+import com.google.common.collect.Queues;
 import org.apache.commons.lang3.StringUtils;
 import org.entur.demo.ukur.entities.MessageTypeEnum;
 import org.entur.demo.ukur.entities.ReceivedMessage;
@@ -154,7 +155,7 @@ public class MessageService {
     }
 
     private Collection<ReceivedMessage> getReceivedMessages(String subscriptionId) {
-        return messageStore.computeIfAbsent(subscriptionId, k -> EvictingQueue.create(MAX_SIZE_PER_SUBSCRIPTION));
+        return messageStore.computeIfAbsent(subscriptionId, k -> Queues.synchronizedQueue(EvictingQueue.create(MAX_SIZE_PER_SUBSCRIPTION)));
     }
 
     private String toString(Object siriElement) {
