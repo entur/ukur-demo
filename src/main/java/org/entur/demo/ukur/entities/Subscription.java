@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import uk.org.siri.siri20.*;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeFactory;
 import java.io.Serializable;
@@ -62,6 +63,17 @@ public class Subscription implements Serializable, Comparable {
     private String xmlCache; //Used to cache the xml representation (works since we don't support updates)
     @JsonIgnore
     private String jsonCache; //Used to cache the jsonCache representation (works since we don't support updates)
+
+    private static final JAXBContext jaxbContext;
+    private static final ObjectMapper mapper = new ObjectMapper();
+
+    static {
+        try {
+            jaxbContext = JAXBContext.newInstance(Siri.class);
+        } catch (JAXBException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     public ArrayList<String> getFromStopPoints() {
         return fromStopPoints;
@@ -223,7 +235,6 @@ public class Subscription implements Serializable, Comparable {
         if (jsonCache == null) {
             logger.debug("calculates json ({})", name);
             try {
-                ObjectMapper mapper = new ObjectMapper();
                 jsonCache = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(this);
             } catch (Exception e) {
                 logger.error("Could not generate JSON", e);
@@ -304,7 +315,7 @@ public class Subscription implements Serializable, Comparable {
                 siri.setVersion("2.0");
                 siri.setSubscriptionRequest(request);
 
-                JAXBContext jaxbContext = JAXBContext.newInstance(Siri.class);
+
                 Marshaller marshaller = jaxbContext.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
