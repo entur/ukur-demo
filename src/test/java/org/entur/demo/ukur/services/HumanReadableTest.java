@@ -31,6 +31,10 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
 import java.io.StringReader;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.UUID;
 
@@ -45,6 +49,16 @@ public class HumanReadableTest {
 
     @Test
     public void testDelayedTo() throws JAXBException {
+        String aimedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 01, 10, 39, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String expectedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 01, 10, 44, 54),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+
+
         String subscriptionId = UUID.randomUUID().toString();
         messageService.addPushMessage(subscriptionId, getEtMessage("<?xml version=\"1.0\" ?>\n" +
                 "<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\">\n" +
@@ -63,8 +77,8 @@ public class HumanReadableTest {
                 "      <StopPointRef>NSR:Quay:555</StopPointRef>\n" +
                 "      <StopPointName>Oslo S</StopPointName>\n" +
                 "      <RequestStop>false</RequestStop>\n" +
-                "      <AimedArrivalTime>2018-02-01T10:39:00+01:00</AimedArrivalTime>\n" +
-                "      <ExpectedArrivalTime>2018-02-01T10:44:54+01:00</ExpectedArrivalTime>\n" +
+                "      <AimedArrivalTime>" + aimedArrivalTime + "</AimedArrivalTime>\n" +
+                "      <ExpectedArrivalTime>" + expectedArrivalTime + "</ExpectedArrivalTime>\n" +
                 "      <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "      <ArrivalPlatformName>9</ArrivalPlatformName>\n" +
                 "      <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
@@ -88,6 +102,23 @@ public class HumanReadableTest {
         String subscriptionId = UUID.randomUUID().toString();
         Subscription subscription = new Subscription();
         subscription.addFromStopPoint("NSR:Quay:555");
+
+        String aimedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 59, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String aimDepartureTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 39, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String expectedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 11, 21, 03),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String expectedDepartureTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 11, 05, 04),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
         messageService.addPushMessage(subscriptionId, getEtMessage("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\" xmlns:ns2=\"http://www.ifopt.org.uk/acsb\" xmlns:ns4=\"http://datex2.eu/schema/2_0RC1/2_0\" xmlns:ns3=\"http://www.ifopt.org.uk/ifopt\">\n" +
                 "    <LineRef>NSB:Line:R11</LineRef>\n" +
@@ -115,8 +146,8 @@ public class HumanReadableTest {
                 "                <AimedQuayRef>NSR:Quay:559</AimedQuayRef>\n" +
                 "                <ExpectedQuayRef>NSR:Quay:559</ExpectedQuayRef>\n" +
                 "            </ArrivalStopAssignment>\n" +
-                "            <AimedDepartureTime>2018-02-07T10:39:00+01:00</AimedDepartureTime>\n" +
-                "            <ExpectedDepartureTime>2018-02-07T11:05:04+01:00</ExpectedDepartureTime>\n" +
+                "            <AimedDepartureTime>" + aimDepartureTime + "</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>" + expectedDepartureTime + "</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>delayed</DepartureStatus>\n" +
                 "            <DeparturePlatformName>5</DeparturePlatformName>\n" +
                 "            <DepartureBoardingActivity>boarding</DepartureBoardingActivity>\n" +
@@ -128,8 +159,8 @@ public class HumanReadableTest {
                 "            <StopPointRef>NSR:Quay:698</StopPointRef>\n" +
                 "            <StopPointName>Asker</StopPointName>\n" +
                 "            <RequestStop>false</RequestStop>\n" +
-                "            <AimedArrivalTime>2018-02-07T10:59:00+01:00</AimedArrivalTime>\n" +
-                "            <ExpectedArrivalTime>2018-02-07T11:21:03+01:00</ExpectedArrivalTime>\n" +
+                "            <AimedArrivalTime>" + aimedArrivalTime + "</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>" + expectedArrivalTime + "</ExpectedArrivalTime>\n" +
                 "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>1</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
@@ -152,7 +183,8 @@ public class HumanReadableTest {
         assertEquals(1, messages.size());
         ReceivedMessage message = messages.iterator().next();
         logger.info(message.getHumanReadable());
-        assertEquals("NSB:Line:R11 towards Larvik from Oslo S 10:39:00 is delayed and expected to depart 11:05:04 to Asker with aimed arrival 10:59:00 is delayed and expected to arrive 11:21:03", message.getHumanReadable());
+        assertEquals("NSB:Line:R11 towards Larvik from Oslo S 10:39:00 is delayed and expected to depart 11:05:04 to Asker with aimed "
+                + "arrival 10:59:00 is delayed and expected to arrive 11:21:03", message.getHumanReadable());
     }
 
     @Test
@@ -160,6 +192,23 @@ public class HumanReadableTest {
         String subscriptionId = UUID.randomUUID().toString();
         Subscription subscription = new Subscription();
         subscription.addFromStopPoint("NSR:Quay:555");
+
+        String arrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 36, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String departureTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 39, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String arrivalTime2 = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 59, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String departureTime2 = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 11, 00, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
         messageService.addPushMessage(subscriptionId, getEtMessage("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\" xmlns:ns2=\"http://www.ifopt.org.uk/acsb\" xmlns:ns4=\"http://datex2.eu/schema/2_0RC1/2_0\" xmlns:ns3=\"http://www.ifopt.org.uk/ifopt\">\n" +
                 "    <LineRef>NSB:Line:R11</LineRef>\n" +
@@ -178,8 +227,8 @@ public class HumanReadableTest {
                 "            <StopPointRef>NSR:Quay:559</StopPointRef>\n" +
                 "            <StopPointName>Oslo S</StopPointName>\n" +
                 "            <RequestStop>false</RequestStop>\n" +
-                "            <AimedArrivalTime>2018-02-07T10:36:00+01:00</AimedArrivalTime>\n" +
-                "            <ExpectedArrivalTime>2018-02-07T10:36:00+01:00</ExpectedArrivalTime>\n" +
+                "            <AimedArrivalTime>" + arrivalTime + "</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>" +arrivalTime+ "</ExpectedArrivalTime>\n" +
                 "            <ArrivalStatus>onTime</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>5</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
@@ -187,8 +236,8 @@ public class HumanReadableTest {
                 "                <AimedQuayRef>NSR:Quay:558</AimedQuayRef>\n" +
                 "                <ExpectedQuayRef>NSR:Quay:559</ExpectedQuayRef>\n" +
                 "            </ArrivalStopAssignment>\n" +
-                "            <AimedDepartureTime>2018-02-07T10:39:00+01:00</AimedDepartureTime>\n" +
-                "            <ExpectedDepartureTime>2018-02-07T10:39:00+01:00</ExpectedDepartureTime>\n" +
+                "            <AimedDepartureTime>" + departureTime + "</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>" + departureTime + "</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>onTime</DepartureStatus>\n" +
                 "            <DeparturePlatformName>5</DeparturePlatformName>\n" +
                 "            <DepartureBoardingActivity>boarding</DepartureBoardingActivity>\n" +
@@ -200,8 +249,8 @@ public class HumanReadableTest {
                 "            <StopPointRef>NSR:Quay:698</StopPointRef>\n" +
                 "            <StopPointName>Asker</StopPointName>\n" +
                 "            <RequestStop>false</RequestStop>\n" +
-                "            <AimedArrivalTime>2018-02-07T10:59:00+01:00</AimedArrivalTime>\n" +
-                "            <ExpectedArrivalTime>2018-02-07T10:59:00+01:00</ExpectedArrivalTime>\n" +
+                "            <AimedArrivalTime>" + arrivalTime2 + "</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>" + arrivalTime2 + "</ExpectedArrivalTime>\n" +
                 "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>1</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
@@ -209,8 +258,8 @@ public class HumanReadableTest {
                 "                <AimedQuayRef>NSR:Quay:697</AimedQuayRef>\n" +
                 "                <ExpectedQuayRef>NSR:Quay:698</ExpectedQuayRef>\n" +
                 "            </ArrivalStopAssignment>\n" +
-                "            <AimedDepartureTime>2018-02-07T11:00:00+01:00</AimedDepartureTime>\n" +
-                "            <ExpectedDepartureTime>2018-02-07TT11:00:00+01:00</ExpectedDepartureTime>\n" +
+                "            <AimedDepartureTime>" + departureTime2 + "</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>" + departureTime2 + "</ExpectedDepartureTime>\n" +
                 "            <DepartureStatus>delayed</DepartureStatus>\n" +
                 "            <DeparturePlatformName>1</DeparturePlatformName>\n" +
                 "            <DepartureBoardingActivity>boarding</DepartureBoardingActivity>\n" +
@@ -232,6 +281,20 @@ public class HumanReadableTest {
         String subscriptionId = UUID.randomUUID().toString();
         Subscription subscription = new Subscription();
         subscription.addFromStopPoint("NSR:Quay:555");
+
+        String aimedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 31, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String departureTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 9, 00),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+        String expectedArrivalTime = ZonedDateTime.of(LocalDateTime.of(2018, 02, 07, 10, 48, 34),
+                ZoneId.systemDefault()).
+                format(DateTimeFormatter.ISO_OFFSET_DATE_TIME);
+
+
         messageService.addPushMessage(subscriptionId, getEtMessage("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n" +
                 "<EstimatedVehicleJourney xmlns=\"http://www.siri.org.uk/siri\" xmlns:ns2=\"http://www.ifopt.org.uk/acsb\" xmlns:ns4=\"http://datex2.eu/schema/2_0RC1/2_0\" xmlns:ns3=\"http://www.ifopt.org.uk/ifopt\">\n" +
                 "    <LineRef>NSB:Line:R10</LineRef>\n" +
@@ -252,10 +315,10 @@ public class HumanReadableTest {
                 "            <ExpectedArrivalTime>2018-02-07T10:08:00+01:00</ExpectedArrivalTime>\n" +
                 "            <ActualArrivalTime>2018-02-07T10:08:00+01:00</ActualArrivalTime>\n" +
                 "            <ArrivalPlatformName>3</ArrivalPlatformName>\n" +
-                "            <AimedDepartureTime>2018-02-07T10:09:00+01:00</AimedDepartureTime>\n" +
-                "            <ExpectedDepartureTime>2018-02-07T10:09:00+01:00</ExpectedDepartureTime>\n" +
+                "            <AimedDepartureTime>" + departureTime + "</AimedDepartureTime>\n" +
+                "            <ExpectedDepartureTime>" + departureTime + "</ExpectedDepartureTime>\n" +
                 "            <DeparturePlatformName>3</DeparturePlatformName>\n" +
-                "            <ActualDepartureTime>2018-02-07T10:09:00+01:00</ActualDepartureTime>\n" +
+                "            <ActualDepartureTime>" + departureTime + "</ActualDepartureTime>\n" +
                 "        </RecordedCall>\n" +
                 "    </RecordedCalls>\n" +
                 "    <EstimatedCalls>\n" +
@@ -263,8 +326,8 @@ public class HumanReadableTest {
                 "            <StopPointRef>NSR:Quay:571</StopPointRef>\n" +
                 "            <StopPointName>Oslo S</StopPointName>\n" +
                 "            <RequestStop>false</RequestStop>\n" +
-                "            <AimedArrivalTime>2018-02-07T10:31:00+01:00</AimedArrivalTime>\n" +
-                "            <ExpectedArrivalTime>2018-02-07T10:48:34+01:00</ExpectedArrivalTime>\n" +
+                "            <AimedArrivalTime>" + aimedArrivalTime + "</AimedArrivalTime>\n" +
+                "            <ExpectedArrivalTime>" + expectedArrivalTime + "</ExpectedArrivalTime>\n" +
                 "            <ArrivalStatus>delayed</ArrivalStatus>\n" +
                 "            <ArrivalPlatformName>11</ArrivalPlatformName>\n" +
                 "            <ArrivalBoardingActivity>alighting</ArrivalBoardingActivity>\n" +
