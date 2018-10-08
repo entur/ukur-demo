@@ -21,7 +21,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.org.siri.siri20.*;
+import uk.org.siri.siri20.EstimatedTimetableRequestStructure;
+import uk.org.siri.siri20.EstimatedTimetableSubscriptionStructure;
+import uk.org.siri.siri20.LineDirectionStructure;
+import uk.org.siri.siri20.LineRef;
+import uk.org.siri.siri20.RequestorRef;
+import uk.org.siri.siri20.Siri;
+import uk.org.siri.siri20.SituationExchangeRequestStructure;
+import uk.org.siri.siri20.SituationExchangeSubscriptionStructure;
+import uk.org.siri.siri20.SubscriptionContextStructure;
+import uk.org.siri.siri20.SubscriptionQualifierStructure;
+import uk.org.siri.siri20.SubscriptionRequest;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
