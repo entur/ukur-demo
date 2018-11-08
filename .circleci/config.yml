@@ -30,13 +30,13 @@ jobs:
     - checkout
     - restore_cache:
         key: dep-cache-{{ checksum "pom.xml" }}
-    - run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.0:go-offline -s /tools/m2/settings.xml
+    - run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.0:go-offline -s /tools/m2/settings-jfrog.xml
     - save_cache:
         paths:
         - ~/.m2
         key: dep-cache-{{ checksum "pom.xml" }}
     # Cannot use -o because of snapshot dependencies.
-    - run: mvn install -s /tools/m2/settings.xml
+    - run: mvn install -s /tools/m2/settings-jfrog.xml
     - run:
         name: Save test results
         command: |
@@ -72,7 +72,7 @@ jobs:
     - run: *docker-login
     - run:
         name: Docker build and push
-        command: mvn docker:build docker:push -s /tools/m2/settings.xml
+        command: mvn docker:build docker:push -s /tools/m2/settings-jfrog.xml
     - run: *post-hook
 workflows:
   version: 2
