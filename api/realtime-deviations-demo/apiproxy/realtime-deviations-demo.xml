@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<APIProxy name="realtime-deviations-demo">
+    <Description>realtime-deviations-demo</Description>
+    <DisplayName>realtime-deviations-demo</DisplayName>
+   <Policies>
+        <Policy>assignMessage.addCors</Policy>
+        <Policy>flowCallout.getEnvironmentConfiguration</Policy>
+        <Policy>flowCallout.generalStackdriverLogging</Policy>
+        <Policy>flowCallout.globalIpBlacklistTeamRutedata</Policy>
+        <Policy>flowCallout.replaceTargetUrl</Policy>
+        <Policy>spikeArrest</Policy>
+        <Policy>flowCallout.generalSecurityHeaders</Policy>
+    </Policies>
+    <ProxyEndpoints>
+        <ProxyEndpoint>realtime-deviations-demo-v1</ProxyEndpoint>
+    </ProxyEndpoints>
+    <Resources/>
+    <Spec></Spec>
+    <TargetServers/>
+    <TargetEndpoints>
+        <TargetEndpoint>realtime-deviations-demo-v1</TargetEndpoint>
+    </TargetEndpoints>
+</APIProxy>
