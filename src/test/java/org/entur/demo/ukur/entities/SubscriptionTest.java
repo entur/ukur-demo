@@ -27,6 +27,7 @@ import javax.xml.bind.Unmarshaller;
 import java.io.IOException;
 import java.io.StringReader;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -73,7 +74,7 @@ public class SubscriptionTest {
     @Test
     public void testXML() throws JAXBException {
         Subscription s = new Subscription();
-        ZonedDateTime time = ZonedDateTime.now().plusWeeks(1);
+        ZonedDateTime time = ZonedDateTime.now().plusWeeks(1).truncatedTo(ChronoUnit.MILLIS);
         s.setInitialTerminationTime(time);
         s.setHeartbeatInterval("PT30M");
         s.setName("My Other Test Subscription");
