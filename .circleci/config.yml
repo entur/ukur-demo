@@ -1,14 +1,9 @@
 version: 2
 aliases:
-- &GCP-auth
-  name: GCP Authenticate
-  command: |
-    echo 'export GCLOUD_SERVICE_KEY="$GCLOUD_SERVICE_KEY"' >> $BASH_ENV
-    /tools/gcp_authenticate.sh
 - &docker-login
   name: Docker login
   command: |
-    echo 'export GCLOUD_SERVICE_KEY="$GCLOUD_SERVICE_KEY"' >> $BASH_ENV
+    echo 'export GCLOUD_SERVICE_KEY="$DOCKER_PASSWORD"' >> $BASH_ENV
     /tools/docker_login.sh
 - &post-hook
   name: Notify about build and docker image pushed
@@ -20,10 +15,10 @@ aliases:
 jobs:
   build:
     docker:
-    - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+    - image: $DOCKER_REGISTRY/circleci-toolbox-image-java11
       auth:
         username: _json_key
-        password: $GCLOUD_SERVICE_KEY
+        password: $DOCKER_PASSWORD
     environment:
       MAVEN_OPTS: -Xmx3G
     steps:
@@ -55,10 +50,10 @@ jobs:
         - .circleci
   deploy-docker:
     docker:
-    - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+    - image: $DOCKER_REGISTRY/circleci-toolbox-image-java11
       auth:
         username: _json_key
-        password: $GCLOUD_SERVICE_KEY
+        password: $DOCKER_PASSWORD
     environment:
       DEBIAN_FRONTEND: "noninteractive"
     steps:
@@ -68,7 +63,6 @@ jobs:
         key: dep-cache-{{ checksum "pom.xml" }}
     - setup_remote_docker:
         docker_layer_caching: true
-    - run: *GCP-auth
     - run: *docker-login
     - run:
         name: Docker build and push
@@ -79,9 +73,9 @@ workflows:
   build_test_deploy:
     jobs:
     - build:
-        context: org-carbon
+        context: global
     - deploy-docker:
-        context: org-carbon
+        context: global
         requires:
         - build
         filters:
