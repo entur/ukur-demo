@@ -8,7 +8,7 @@ aliases:
 - &post-hook
   name: Notify about build and docker image pushed
   command: |
-    echo 'export CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME"' >> $BASH_ENV
+    echo 'export CIRCLE_PROJECT_REPONAME="$DOCKER_PASSWORD"' >> $BASH_ENV
     echo 'export CIRCLE_SHA1="$CIRCLE_SHA1"' >> $BASH_ENV
     echo 'export BUILD_STATUS_API_KEY="$BUILD_STATUS_API_KEY"' >> $BASH_ENV
     /tools/build_notify.sh
@@ -73,9 +73,9 @@ workflows:
   build_test_deploy:
     jobs:
     - build:
-        context: global
+        context: org-carbon
     - deploy-docker:
-        context: global
+        context: org-carbon
         requires:
         - build
         filters:
