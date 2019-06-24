@@ -25,7 +25,7 @@ jobs:
   build:
     executor: java-11
     steps:
-      - checkout-git
+      - checkout
       - maven/with_cache:
           steps:
             - run: *clean-build
