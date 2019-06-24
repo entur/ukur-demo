@@ -5,6 +5,22 @@ aliases:
      "clean install"
 orbs:
   maven: circleci/maven@0.0.8
+
+executors:
+  # Use machine-executor if you run tests inside testcontainers.
+  machine-executor:
+    machine: true
+  java-11:
+    docker:
+      - image: circleci/openjdk:11-jdk
+        environment:
+          _JAVA_OPTIONS: -Xmx1024m
+          TERM: dumb
+          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
+  entur-cci-toolbox:
+    docker:
+      - image: entur/cci-toolbox:2.0
+
 jobs:
   build:
     executor: java-11
