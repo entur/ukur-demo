@@ -43,7 +43,3 @@ workflows:
     - build:
         name: build-release
         context: global
-        filters:
-          branches:
-            only:
-              - /helm-charts/.*/
