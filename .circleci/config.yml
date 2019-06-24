@@ -5,7 +5,6 @@ aliases:
      "clean install"
 orbs:
   maven: circleci/maven@0.0.8
-
 executors:
   # Use machine-executor if you run tests inside testcontainers.
   machine-executor:
