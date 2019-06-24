@@ -27,6 +27,7 @@ jobs:
     steps:
       - checkout
       - maven/with_cache:
+          settings_file: ./circleci/settings.xml
           steps:
             - run: *clean-build
       - persist_to_workspace:
