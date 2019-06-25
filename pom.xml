@@ -37,7 +37,7 @@
         <javax.activation.version>1.2.0</javax.activation.version>
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
         <docker.maven.plugin.version>0.28.0</docker.maven.plugin.version>
-        <docker.from>eu.gcr.io/carbon-1287/openjdk11-base-image</docker.from>
+        <docker.from>eu.gcr.io/entur-system-1287/openjdk11-base-image</docker.from>
         <fabric8.dockerUser>entur-system--1287/</fabric8.dockerUser>
         <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:${project.version}</docker.image>
         <docker.cleanup>none</docker.cleanup>
