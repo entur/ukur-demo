@@ -3,6 +3,24 @@ aliases:
   ### RUN COMMANDS
   - &clean-build
      "clean install"
+  ### GIT
+  - &restore-source-code
+    keys:
+      - source-{{ .Branch }}-{{ .Revision }}
+      - source-{{ .Branch }}
+      - source-master-a
+
+  - &save-source-code
+    key: source-{{ .Branch }}-{{ .Revision }}
+    paths:
+      - ".git"
+
+  commands:
+    checkout-git:
+      steps:
+        - restore_cache: *restore-source-code
+        - checkout
+        - save_cache: *save-source-code
 orbs:
   maven: circleci/maven@0.0.8
 executors:
@@ -24,7 +42,8 @@ jobs:
   build:
     executor: java-11
     steps:
-      - checkout
+      - checkout-git
+
       - maven/with_cache:
           settings_file: .circleci/settings.xml
           steps:
