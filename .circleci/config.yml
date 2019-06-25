@@ -2,7 +2,7 @@ version: 2.1
 aliases:
   ### RUN COMMANDS
   - &clean-build
-     "clean install"
+      "clean install"
   ### GIT
   - &restore-source-code
     keys:
@@ -59,6 +59,6 @@ workflows:
   version: 2.1
   release:
     jobs:
-    - build:
-        name: build-release
-        context: global
+      - build:
+          name: build-release
+          context: global
