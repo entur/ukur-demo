@@ -15,7 +15,7 @@ aliases:
     paths:
       - ".git"
 
-  commands:
+commands:
     checkout-git:
       steps:
         - restore_cache: *restore-source-code
@@ -56,7 +56,6 @@ jobs:
             - .circleci
 
 workflows:
-  version: 2.1
   release:
     jobs:
       - build:
