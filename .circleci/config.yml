@@ -1,63 +1,80 @@
-version: 2.1
+version: 2
 aliases:
-  ### RUN COMMANDS
-  - &clean-build
-      "mvn clean install"
-  ### GIT
-  - &restore-source-code
-    keys:
-      - source-{{ .Branch }}-{{ .Revision }}
-      - source-{{ .Branch }}
-      - source-master-a
+  - &GCP-auth
+    name: GCP Authentication for Google Cloud Deploy
+    command: |
+      echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
+      gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+      gcloud --quiet container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER
 
-  - &save-source-code
-    key: source-{{ .Branch }}-{{ .Revision }}
-    paths:
-      - ".git"
+  - &docker-login
+    name: Login with docker on gcloud
+    command: docker login -u "${DOCKER_LOGIN}" -p "${DOCKER_PASSWORD}" $DOCKER_REGISTRY
 
-commands:
-    checkout-git:
-      steps:
-        - restore_cache: *restore-source-code
-        - checkout
-        - save_cache: *save-source-code
-orbs:
-  maven: circleci/maven@0.0.8
-executors:
-  # Use machine-executor if you run tests inside testcontainers.
-  machine-executor:
-    machine: true
-  java-11:
-    docker:
-      - image: circleci/openjdk:11-jdk
-        environment:
-          _JAVA_OPTIONS: -Xmx1024m
-          TERM: dumb
-          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
-  entur-cci-toolbox:
-    docker:
-      - image: entur/cci-toolbox:2.0
 
 jobs:
   build:
-    executor: java-11
+    docker:
+      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+        auth:
+          username: _json_key
+          password: $DOCKER_PASSWORD
+          environment:
+        MAVEN_OPTS: -Xmx3G
     steps:
-      - checkout-git
-
-      - maven/with_cache:
-          settings_file: .circleci/settings.xml
-          steps:
-            - run: *clean-build
-      - persist_to_workspace:
-          root:  ~/project
+      - checkout
+      - restore_cache:
+          key: dep-cache-{{ checksum "pom.xml" }}
+      - run: mvn org.apache.maven.plugins:maven-dependency-plugin:3.1.0:go-offline -s /tools/m2/settings.xml
+      - save_cache:
           paths:
-            - target
-            - pom.xml
-            - .circleci
-
+            - ~/.m2
+          key: dep-cache-{{ checksum "pom.xml" }}
+      # Cannot use -o because of snapshot dependencies.
+      - run: mvn install -s /tools/m2/settings.xml
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+          when: always
+      - store_test_results:
+          path: ~/junit
+      - store_artifacts:
+          path: ~/junit
+      - persist_to_workspace:
+              root:  ~/project
+              paths:
+                - target
+                - pom.xml
+                - .circleci
+  deploy-docker:
+    docker:
+      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+        auth:
+          username: _json_key
+          password: $DOCKER_PASSWORD
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - restore_cache:
+          key: dep-cache-{{ checksum "pom.xml" }}
+      - setup_remote_docker:
+          docker_layer_caching: true
+      ###- run: *GCP-auth
+      - run: *docker-login
+      - run:
+          name: Docker build and push
+          command: mvn docker:build docker:push -s /tools/m2/settings.xml
 workflows:
-  release:
+  version: 2
+  build_test_deploy:
     jobs:
       - build:
-          name: build-release
+        context: global
+      - deploy-docker:
           context: global
+          requires:
+            - build
