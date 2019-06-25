@@ -43,11 +43,11 @@ jobs:
       - store_artifacts:
           path: ~/junit
       - persist_to_workspace:
-              root:  ~/project
-              paths:
-                - target
-                - pom.xml
-                - .circleci
+          root:  ~/project
+          paths:
+            - target
+            - pom.xml
+            - .circleci
   deploy-docker:
     docker:
       - image: eu.gcr.io/entur-system-1287/circleci-toolbox-image-java11
@@ -73,8 +73,8 @@ workflows:
   build_test_deploy:
     jobs:
       - build:
-        context: org-carbon
+         context: org-carbon
       - deploy-docker:
-        context: org-carbon
+          context: org-carbon
           requires:
-            - build
+           - build
