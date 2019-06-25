@@ -2,7 +2,7 @@ version: 2.1
 aliases:
   ### RUN COMMANDS
   - &clean-build
-      "clean install"
+      "mvn clean install"
   ### GIT
   - &restore-source-code
     keys:
