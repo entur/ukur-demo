@@ -1,0 +1,31 @@
+minReplicas: 1
+maxReplicas: 1
+image: eu.gcr.io/entur-system-1287/ukur-demo
+imageTag: release-0.0.1
+imagePullPolicy: Always
+slack: talk-ror
+team: ror
+type: backend
+app: ukur-demo
+api: realtime-deviations-demo-v1
+service:
+  name: ukur-demo
+  type: ClusterIP
+  externalPort: 80
+  internalPort: 8080
+  internalJolokiaPort: 8778
+  debugPort: 5005
+resources:
+  cpuLimit: "2"
+  memLimit: 2048Mi
+  cpuRequest: 200m
+  memRequest: 512Mi
+  xmx: 1024m
+
+# Environment Specific
+externalDns:
+  ingressLoadBalancerIP: 
+    dev: "35.195.223.29"
+    staging: "35.195.146.93"
+    production: "35.187.15.14"
+

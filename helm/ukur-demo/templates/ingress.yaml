@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+  annotations:
+    {{- if eq .Release.Namespace "dev" }}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.dev }}
+    {{- else if eq .Release.Namespace "staging" }}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.staging }}
+    {{- else if eq .Release.Namespace "production" }}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.production }}
+    {{- end }}
+    kubernetes.io/ingress.class: traefik
+  name: {{ .Release.Name }}-{{ .Values.api }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  rules:
+    {{- if eq .Release.Namespace "dev" }}
+    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.dev.entur.io
+    {{- else if eq .Release.Namespace "staging" }}
+    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.staging.entur.io
+    {{- else if eq .Release.Namespace "staging" }}
+    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.entur.io
+    {{- end }}
+      http:
+        paths:
+        - backend:
+            serviceName: {{ .Release.Name }}
+            servicePort: {{ .Values.service.externalPort }}
