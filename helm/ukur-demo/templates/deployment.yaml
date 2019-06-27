@@ -66,11 +66,11 @@ spec:
             memory: {{ .Values.resources.memRequest }}
         volumeMounts:
         - mountPath: /etc/application-config
-          name: {{ .Values.app }}-config
+          name: {{ .Values.app }}
           readOnly: true
       restartPolicy: Always
       volumes:
       - configMap:
           defaultMode: 420
-          name: {{ .Values.app }}-config
-        name: {{ .Values.app }}-config
+          name: {{ .Values.app }}
+        name: {{ .Values.app }}

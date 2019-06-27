@@ -1,7 +1,7 @@
 minReplicas: 1
 maxReplicas: 1
 image: eu.gcr.io/entur-system-1287/ukur-demo
-imageTag: release-0.0.1
+imageTag: 1.0-SNAPSHOT
 imagePullPolicy: Always
 slack: talk-ror
 team: ror
