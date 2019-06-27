@@ -10,7 +10,7 @@ spec:
   revisionHistoryLimit: 2
   selector:
     matchLabels:
-      app: {{ .Release.Name }}
+      {{- include "common.labels" . | indent 8 }}
   strategy:
     type: Recreate
   template:

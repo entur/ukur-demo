@@ -24,6 +24,6 @@
     </PreFlow>
     <HTTPTargetConnection>
         <Properties/>
-        <URL>https://realtime-deviations-v1-demo-NAMESPACE.INGRESS_ENVIRONMENT</URL>
+        <URL>https://ukur-demo-realtime-deviations-demo-v1-NAMESPACE.INGRESS_ENVIRONMENT/</URL>
     </HTTPTargetConnection>
 </TargetEndpoint>
