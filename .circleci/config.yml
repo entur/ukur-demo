@@ -1,4 +1,7 @@
 version: 2
+
+orbs:
+  helm: entur/helm@0.0.1
 aliases:
 - &GCP-auth
   name: GCP Authenticate
@@ -72,7 +75,7 @@ jobs:
     - run: *docker-login
     - run:
         name: Docker build and push
-        command: mvn docker:build docker:push -s /tools/m2/settings.xml
+        command: mvn docker:build docker:push -s /tools/m2/settings.xml -Drelease.version=$CIRCLE_SHA1
     - run: *post-hook
 workflows:
   version: 2
