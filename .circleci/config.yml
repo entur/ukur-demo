@@ -133,6 +133,7 @@ jobs:
           fingerprints:
             - $SSH_FINGERPRINT
       - run: *bump-versions
+      - run: *get-version-from-pom
       - run: *git-push-next-version-release
 
 workflows:
