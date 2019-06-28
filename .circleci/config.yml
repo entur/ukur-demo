@@ -42,11 +42,7 @@ aliases:
   - &get-version-from-pom
     name: Getting version by maven pom version
     command: |
-      MVN_VERSION=$(mvn -q \
-          -Dexec.executable=echo \
-          -Dexec.args='${project.version}' \
-          --non-recursive \
-          exec:exec)
+      MVN_VERSION=$(mvn -q -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
 
   - &set-versions-to-maven-version
