@@ -123,15 +123,15 @@ jobs:
         auth:
           username: _json_key
           password: $GCLOUD_SERVICE_KEY
-        steps:
-          - checkout
-          - attach_workspace:
-              at: .
-          - add_ssh_keys:
-              fingerprints:
-                - $SSH_FINGERPRINT
-          - run: *bump-versions
-          - run: *git-push-next-version-release
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - add_ssh_keys:
+          fingerprints:
+            - $SSH_FINGERPRINT
+      - run: *bump-versions
+      - run: *git-push-next-version-release
 
 workflows:
   version: 2
