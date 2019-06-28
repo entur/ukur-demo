@@ -1,7 +1,7 @@
 minReplicas: 1
 maxReplicas: 1
 image: eu.gcr.io/carbon-1287/ukur-demo
-imageTag: 1.0-SNAPSHOT
+imageTag: release-
 imagePullPolicy: Always
 slack: talk-ror
 team: ror
