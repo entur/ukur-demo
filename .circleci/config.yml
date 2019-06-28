@@ -123,10 +123,12 @@ jobs:
         auth:
           username: _json_key
           password: $GCLOUD_SERVICE_KEY
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
     steps:
       - checkout
       - attach_workspace:
-          at: .
+          at: ~/project
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
