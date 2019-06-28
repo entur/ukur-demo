@@ -131,7 +131,7 @@ jobs:
           at: ~/project
       - add_ssh_keys:
           fingerprints:
-            - $GITHUB_TOKEN
+            - $SSH_FINGERPRINT
       - run: *bump-versions
       - run: *git-push-next-version-release
 
