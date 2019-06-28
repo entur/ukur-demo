@@ -28,10 +28,10 @@ aliases:
   - &git-push-next-version-release
     name: Push to repository
     command: |
-      echo "Trying to tag release-$MAVEN_VERSION"
+      echo "Trying to tag release-$MVN_VERSION"
       git config --global user.email "circleci@entur.org"
       git config --global user.name "EnturCircleCi"
-      git tag -a release-$MAVEN_VERSION -m "Tagging current version"
+      git tag -a release-$MVN_VERSION -m "Tagging current version"
       git add helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
       git add helm/$CIRCLE_PROJECT_REPONAME/values.yaml
       git add pom.xml
