@@ -118,8 +118,11 @@ jobs:
     - run: *post-hook
 
   prepare-next-release:
-      executor: java-11
-
+    docker:
+      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+        auth:
+          username: _json_key
+          password: $GCLOUD_SERVICE_KEY
       steps:
         - checkout
         - attach_workspace:
