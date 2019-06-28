@@ -130,9 +130,9 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
-      - run: *bump-versions
-      - run: *set-versions-to-maven-version
+      #- run: *bump-versions
       - run: *get-version-from-pom
+      - run: *set-versions-to-maven-version
       - run: *git-push-next-version-release
 
 workflows:
