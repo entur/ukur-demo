@@ -75,7 +75,7 @@ jobs:
     - run: *docker-login
     - run:
         name: Docker build and push
-        command: mvn docker:build docker:push -s /tools/m2/settings.xml -Drelease.version=$CIRCLE_SHA1
+        command: mvn docker:build docker:push -s /tools/m2/settings.xml
     - run: *post-hook
 workflows:
   version: 2

@@ -157,7 +157,7 @@
                 <artifactId>docker-maven-plugin</artifactId>
                 <version>${docker.maven.plugin.version}</version>
                 <configuration>
-                    <autoPull>off</autoPull>
+                    <autoPull>always</autoPull>
                     <images>
                         <image>
                             <name>${docker.image}</name>
