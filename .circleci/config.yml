@@ -24,6 +24,15 @@ aliases:
     name: Bump version in pom file
     command: |
       mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion} versions:commit
+      cd ~/project
+      NEXT_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
+      echo "export NEXT_VERSION=$NEXT_VERSION" >> $BASH_ENV
+      echo "Bumping versions from $MVN_VERSION to $NEXT_VERSION"
+      pushd helm/$CIRCLE_PROJECT_REPONAME
+      sed -i "s/version:.*$/version: '$NEXT_VERSION'/g"  ./Chart.yaml
+      sed -i "s/appVersion:.*$/appVersion: 'release-$NEXT_VERSION'/g"  ./Chart.yaml
+      sed -i "s/imageTag:.*$/imageTag: release-$NEXT_VERSION/g"  ./values.yaml
+      popd
 
   - &git-push-next-version-release
     name: Push to repository
@@ -45,16 +54,6 @@ aliases:
       cd ~/project
       MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
-
-  - &set-versions-to-maven-version
-    name: Set version in helm dir to $MVN_VERSION
-    command: |
-      echo "Setting helm versions to $MVN_VERSION"
-      pushd helm/$CIRCLE_PROJECT_REPONAME
-      sed -i "s/version:.*$/version: '$MVN_VERSION'/g"  ./Chart.yaml
-      sed -i "s/appVersion:.*$/appVersion: 'release-$MVN_VERSION'/g"  ./Chart.yaml
-      sed -i "s/imageTag:.*$/imageTag: release-$MVN_VERSION/g"  ./values.yaml
-      popd
 
 jobs:
   build:
@@ -130,9 +129,8 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
-      #- run: *bump-versions
       - run: *get-version-from-pom
-      - run: *set-versions-to-maven-version
+      - run: *bump-versions
       - run: *git-push-next-version-release
 
 workflows:
