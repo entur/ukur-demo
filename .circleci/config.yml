@@ -75,9 +75,11 @@ aliases:
       cd ~/project
       MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
+      echo $MVN_VERSION > mvn_version
   - &tag-successful-deployment
     name:
     command: |
+      MVN_VERSION=$(cat ./mvn_version)
       echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
       tag=release-$MVN_VERSION
       gitcommit=$(git rev-list -n 1 $tag)
@@ -161,7 +163,7 @@ jobs:
       - run:
           name: Deployed helm chart
           command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
-      #- run: *tag-successful-deployment
+      - run: *tag-successful-deployment
 
 workflows:
   version: 2.1
