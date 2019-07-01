@@ -15,6 +15,14 @@ executors:
     docker:
       - image: entur/cci-toolbox:2.0
 
+  cci-toolbox-java11:
+    docker:
+    - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+      auth:
+        username: _json_key
+        password: $GCLOUD_SERVICE_KEY
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
 aliases:
   - &GCP-auth
     name: GCP Authenticate
@@ -79,13 +87,7 @@ aliases:
       git push origin $NAMESPACE-$MVN_VERSION
 jobs:
   build:
-    docker:
-      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
-        auth:
-          username: _json_key
-          password: $GCLOUD_SERVICE_KEY
-    environment:
-      MAVEN_OPTS: -Xmx3G
+    executor: cci-toolbox-java11
     steps:
       - checkout
       - restore_cache:
@@ -115,13 +117,7 @@ jobs:
             - .circleci
             - helm/*/
   deploy-docker:
-    docker:
-      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
-        auth:
-          username: _json_key
-          password: $GCLOUD_SERVICE_KEY
-    environment:
-      DEBIAN_FRONTEND: "noninteractive"
+    executor: cci-toolbox-java11
     steps:
       - attach_workspace:
           at: ~/project
@@ -137,7 +133,7 @@ jobs:
       - run: *post-hook
 
   prepare-next-release:
-    executor: java-11
+    executor: cci-toolbox-java11
 
     steps:
       - checkout
