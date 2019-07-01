@@ -14,7 +14,6 @@ executors:
   entur-cci-toolbox:
     docker:
       - image: entur/cci-toolbox:2.0
-
   cci-toolbox-java11:
     docker:
     - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
@@ -153,7 +152,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: .
-      - run: *get-version-from-pom
       - run: *GCP-auth
       - helm/install-helm-chart:
           chart: ./helm/$CIRCLE_PROJECT_REPONAME
