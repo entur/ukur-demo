@@ -2,6 +2,12 @@ version: 2
 
 orbs:
   helm: entur/helm@0.0.1
+
+executtors:
+  entur-cci-toolbox:
+    docker:
+      - image: entur/cci-toolbox:2.0
+
 aliases:
   - &GCP-auth
     name: GCP Authenticate
@@ -54,7 +60,16 @@ aliases:
       cd ~/project
       MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
-
+  - &tag-successful-deployment
+    name:
+    command: |
+      echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
+      tag=release-$MVN_VERSION
+      gitcommit=$(git rev-list -n 1 $tag)
+      git config --global user.email "circleci@entur.org"
+      git config --global user.name "EnturCircleCi"
+      git tag -a $NAMESPACE-$MVN_VERSION $gitcommit -m "Tagging successfull deployment of version $MVN_VERSION to $NAMESPACE"
+      git push origin $NAMESPACE-$MVN_VERSION
 jobs:
   build:
     docker:
@@ -133,6 +148,24 @@ jobs:
       - run: *bump-versions
       - run: *git-push-next-version-release
 
+  deploy:
+    executor: entur-cci-toolbox
+
+    steps:
+      - checkout-git
+      - attach_workspace:
+          at: .
+      - run: *get-version-from-pom
+      - run: *GCP-auth
+      - helm/install-helm-chart:
+        chart: ./helm/$CIRCLE_PROJECT_REPONAME
+        namespace: $NAMESPACE
+        release-name: $CIRCLE_PROJECT_REPONAME-$BRANCH_IMAGE_NAME-$NAMESPACE
+      - run:
+          name: Deployed helm chart
+          command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
+      - run: *tag-successful-deployment
+
 workflows:
   version: 2
   build_test_deploy:
@@ -150,3 +183,8 @@ workflows:
           context: org-carbon
           requires:
             - deploy-docker
+      - deploy:
+          name: deploy-dev-release
+          context: org-carbon
+          requires:
+            - prepare-next-release
