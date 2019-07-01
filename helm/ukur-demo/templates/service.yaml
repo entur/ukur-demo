@@ -17,5 +17,6 @@ spec:
     targetPort: {{ .Values.service.debugPort }}
   selector:
     app: {{ .Release.Name }}
+    version: {{ .Chart.Version }}
   sessionAffinity: None
   type: ClusterIP

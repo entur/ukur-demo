@@ -22,7 +22,7 @@ version: {{ .Chart.Version }}
 team: {{ .Values.team }}
 slack: {{ .Values.slack }}
 type: {{ .Values.type }}
-chart: {{ .Chart.Name }}-{{ .Chart.Version | replace "+" "_" }}
+chart: {{ .Chart.Name }}
 release: {{ .Release.Name }}
 api: {{ .Values.api }}
 {{- end }}

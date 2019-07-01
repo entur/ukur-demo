@@ -51,7 +51,6 @@ aliases:
       echo "export NEXT_VERSION=$NEXT_VERSION" >> $BASH_ENV
       echo "Bumping versions from $MVN_VERSION to $NEXT_VERSION"
       pushd helm/$CIRCLE_PROJECT_REPONAME
-      sed -i "s/version:.*$/version: '$NEXT_VERSION'/g"  ./Chart.yaml
       sed -i "s/appVersion:.*$/appVersion: 'release-$NEXT_VERSION'/g"  ./Chart.yaml
       sed -i "s/imageTag:.*$/imageTag: release-$NEXT_VERSION/g"  ./values.yaml
       popd
