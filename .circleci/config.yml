@@ -3,14 +3,14 @@ version: 2.1
 orbs:
   helm: entur/helm@0.0.1
 
-executtors:
+executors:
   java-11:
     docker:
-      - image: circleci/openjdk:11-jdk
-        environment:
-          _JAVA_OPTIONS: -Xmx1024m
-          TERM: dumb
-          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
+    - image: circleci/openjdk:11-jdk
+      environment:
+        _JAVA_OPTIONS: -Xmx1024m
+        TERM: dumb
+        TZ: "/usr/share/zoneinfo/Europe/Stockholm"
   entur-cci-toolbox:
     docker:
       - image: entur/cci-toolbox:2.0
@@ -154,7 +154,7 @@ jobs:
     executor: entur-cci-toolbox
 
     steps:
-      - checkout-git
+      - checkout
       - attach_workspace:
           at: .
       - run: *get-version-from-pom
