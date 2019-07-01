@@ -158,7 +158,7 @@ jobs:
       - helm/install-helm-chart:
           chart: ./helm/$CIRCLE_PROJECT_REPONAME
           namespace: $NAMESPACE
-          release-name: $CIRCLE_PROJECT_REPONAME-$BRANCH_IMAGE_NAME-$NAMESPACE
+          release-name: $CIRCLE_PROJECT_REPONAME
       - run:
           name: Deployed helm chart
           command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
