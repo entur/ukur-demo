@@ -20,6 +20,7 @@ import org.entur.demo.ukur.entities.Subscription;
 import org.entur.demo.ukur.services.MessageService;
 import org.entur.demo.ukur.services.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -39,6 +40,9 @@ public class SubscriptionController {
     private final MessageService messageService;
 
     @Autowired
+    BuildProperties buildProperties;
+
+    @Autowired
     public SubscriptionController(SubscriptionService subscriptionService, MessageService messageService) {
         this.subscriptionService = subscriptionService;
         this.messageService = messageService;
@@ -51,6 +55,11 @@ public class SubscriptionController {
             subscription.setNumberOfMessages(messageService.getMessageCount(subscription.getId()));
         }
         return all;
+    }
+
+    @ModelAttribute("buildVersion")
+    public String buildVersion() {
+        return buildProperties.getVersion();
     }
 
     @RequestMapping({"/", "subscriptions"})

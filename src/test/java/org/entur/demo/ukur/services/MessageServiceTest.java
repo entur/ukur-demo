@@ -22,8 +22,14 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.info.BuildProperties;
 import uk.org.siri.siri20.EstimatedVehicleJourney;
 import uk.org.siri.siri20.PtSituationElement;
+
+import java.net.URL;
+import java.time.Instant;
+import java.util.Properties;
 
 import static org.entur.demo.ukur.services.MessageService.MAX_SIZE_PER_SUBSCRIPTION;
 import static org.junit.Assert.*;
@@ -72,4 +78,5 @@ public class MessageServiceTest {
         assertEquals(MessageTypeEnum.ET, message.getType());
         assertNotNull(message.getXmlString());
     }
+
 }
