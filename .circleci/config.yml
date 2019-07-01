@@ -75,11 +75,11 @@ aliases:
       cd ~/project
       MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
-      echo $MVN_VERSION > mvn_version
+      echo $MVN_VERSION > ./mvn_version
   - &tag-successful-deployment
     name:
     command: |
-      MVN_VERSION=$(cat project/mvn_version)
+      MVN_VERSION=$(cat ./mvn_version)
       echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
       tag=release-$MVN_VERSION
       gitcommit=$(git rev-list -n 1 $tag)
@@ -153,6 +153,10 @@ jobs:
       - run: *get-version-from-pom
       - run: *bump-versions
       - run: *git-push-next-version-release
+        -
+      - persist_to_workspace:
+          root: .
+          paths: ./mvn_version
 
   deploy:
     executor: entur-cci-toolbox
