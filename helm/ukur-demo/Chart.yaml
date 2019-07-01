@@ -1,7 +1,7 @@
 apiVersion: v1
 name: ukur-demo
-version: '1.0.7'
-appVersion: 'release-1.0.7'
+version: '1.0.8'
+appVersion: 'release-1.0.8'
 description: ukur-demo is something
 keywords:
 - ukur-demo
