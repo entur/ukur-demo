@@ -1,9 +1,16 @@
-version: 2
+version: 2.1
 
 orbs:
   helm: entur/helm@0.0.1
 
 executtors:
+  java-11:
+    docker:
+      - image: circleci/openjdk:11-jdk
+        environment:
+          _JAVA_OPTIONS: -Xmx1024m
+          TERM: dumb
+          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
   entur-cci-toolbox:
     docker:
       - image: entur/cci-toolbox:2.0
@@ -130,13 +137,8 @@ jobs:
       - run: *post-hook
 
   prepare-next-release:
-    docker:
-      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
-        auth:
-          username: _json_key
-          password: $GCLOUD_SERVICE_KEY
-    environment:
-      DEBIAN_FRONTEND: "noninteractive"
+    executor: java-11
+
     steps:
       - checkout
       - attach_workspace:
@@ -158,24 +160,25 @@ jobs:
       - run: *get-version-from-pom
       - run: *GCP-auth
       - helm/install-helm-chart:
-        chart: ./helm/$CIRCLE_PROJECT_REPONAME
-        namespace: $NAMESPACE
-        release-name: $CIRCLE_PROJECT_REPONAME-$BRANCH_IMAGE_NAME-$NAMESPACE
+          chart: ./helm/$CIRCLE_PROJECT_REPONAME
+          namespace: $NAMESPACE
+          release-name: $CIRCLE_PROJECT_REPONAME-$BRANCH_IMAGE_NAME-$NAMESPACE
       - run:
           name: Deployed helm chart
           command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
       - run: *tag-successful-deployment
 
 workflows:
-  version: 2
-  build_test_deploy:
+  version: 2.1
+  release:
     jobs:
       - build:
+          name: build-release
           context: org-carbon
       - deploy-docker:
           context: org-carbon
           requires:
-            - build
+            - build-release
           filters:
             branches:
               only: master
