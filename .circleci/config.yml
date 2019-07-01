@@ -79,7 +79,7 @@ aliases:
   - &tag-successful-deployment
     name:
     command: |
-      MVN_VERSION=$(cat ./mvn_version)
+      MVN_VERSION=$(cat project/mvn_version)
       echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
       tag=release-$MVN_VERSION
       gitcommit=$(git rev-list -n 1 $tag)
@@ -125,6 +125,10 @@ jobs:
           at: ~/project
       - restore_cache:
           key: dep-cache-{{ checksum "pom.xml" }}
+      - save_cache:
+          paths:
+           - ~/.m2
+          key: dep-cache-{{ checksum "pom.xml" }}
       - setup_remote_docker:
           docker_layer_caching: true
       - run: *GCP-auth
@@ -139,6 +143,8 @@ jobs:
 
     steps:
       - checkout
+      - restore_cache:
+          key: dep-cache-{{ checksum "pom.xml" }}
       - attach_workspace:
           at: ~/project
       - add_ssh_keys:
