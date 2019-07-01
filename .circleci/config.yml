@@ -24,10 +24,12 @@ executors:
       DEBIAN_FRONTEND: "noninteractive"
 aliases:
   - &GCP-auth
-    name: GCP Authenticate
+    name: GCP Authentication for Google Cloud Deploy
     command: |
-      echo 'export GCLOUD_SERVICE_KEY="$GCLOUD_SERVICE_KEY"' >> $BASH_ENV
-      /tools/gcp_authenticate.sh
+      echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
+      gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
+      gcloud --quiet container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER
+
   - &docker-login
     name: Docker login
     command: |
