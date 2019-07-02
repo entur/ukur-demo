@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   helm: entur/helm@0.0.1
+  slack: circleci/slack@2.2.0
 
 executors:
   java-11:
@@ -76,10 +77,13 @@ aliases:
       MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
       echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
       echo $MVN_VERSION > ./mvn_version
+  - &get-mvn-version-from-file
+    name: Getting release version from mvn_version file
+    command: |
+      echo "export MVN_VERSION=$(cat ./mvn_version) >> $BASH_ENV
   - &tag-successful-deployment
     name:
     command: |
-      MVN_VERSION=$(cat ./mvn_version)
       echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
       tag=release-$MVN_VERSION
       gitcommit=$(git rev-list -n 1 $tag)
@@ -87,6 +91,43 @@ aliases:
       git config --global user.name "EnturCircleCi"
       git tag -a $NAMESPACE-$MVN_VERSION $gitcommit -m "Tagging successfull deployment of version $MVN_VERSION to $NAMESPACE"
       git push origin $NAMESPACE-$MVN_VERSION
+
+  - &team-ror-circleci-slackhook
+      https://hooks.slack.com/services/${SLACK_API_KEY_CIRCLE_CI}
+
+  - &team-ror-releases-slackhook
+      https://hooks.slack.com/services/${SLACK_API_KEY_RELEASES}
+
+  - &deploy-payload
+      "*Ready to Deploy*: <$CIRCLE_BUILD_URL|$CIRCLE_PROJECT_REPONAME #$CIRCLE_PREVIOUS_BUILD_NUM> to *$NAMESPACE*\n
+        Repository: <https://circleci.com/bb/enturas/workflows/$CIRCLE_PROJECT_REPONAME|$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME>\n
+        Branch: <https://circleci.com/bb/enturas/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH|$CIRCLE_BRANCH>\n
+        Version: $MVN_VERSION \n
+        User: $CIRCLE_USERNAME"
+
+  - &success-payload
+      ":tada: Job $CIRCLE_STAGE has succeeded!\n
+         Version: $MVN_VERSION \n
+         User: $CIRCLE_USERNAME"
+  - &failure-payload
+      ":red_circle: Job $CIRCLE_STAGE has failed!\n
+         Version: $MVN_VERSION \n
+         User: $CIRCLE_USERNAME"
+
+commands:
+  slack-status:
+    parameters:
+      success_payload:
+        type: string
+        default: *success-payload
+    steps:
+      - attach_workspace:
+          at: .
+      - run: *get-mvn-version-from-file
+      - slack/status:
+          webhook: *team-ror-circleci-slackhook
+          success_message: << parameters.success_payload >>
+          failure_message: *failure-payload
 jobs:
   build:
     executor: cci-toolbox-java11
@@ -100,6 +141,7 @@ jobs:
             - ~/.m2
           key: dep-cache-{{ checksum "pom.xml" }}
       # Cannot use -o because of snapshot dependencies.
+      - run: *get-version-from-pom
       - run: mvn install -s /tools/m2/settings.xml
       - run:
           name: Save test results
@@ -118,6 +160,8 @@ jobs:
             - pom.xml
             - .circleci
             - helm/*/
+            - ./mvn_version
+      - slack-status
   deploy-docker:
     executor: cci-toolbox-java11
     steps:
@@ -136,7 +180,7 @@ jobs:
       - run:
           name: Docker build and push
           command: mvn docker:build docker:push -s /tools/m2/settings.xml
-      - run: *post-hook
+      - slack-status
 
   prepare-next-release:
     executor: cci-toolbox-java11
@@ -150,12 +194,10 @@ jobs:
       - add_ssh_keys:
           fingerprints:
             - $SSH_FINGERPRINT
-      - run: *get-version-from-pom
+      - run: *get-mvn-version-from-file
       - run: *bump-versions
       - run: *git-push-next-version-release
-      - persist_to_workspace:
-          root: .
-          paths: ./mvn_version
+      - slack-status
 
   deploy:
     executor: entur-cci-toolbox
@@ -172,7 +214,19 @@ jobs:
       - run:
           name: Deployed helm chart
           command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
+      - run: *get-mvn-version-from-file
       - run: *tag-successful-deployment
+      - slack-status
+
+  slack-approval:
+    executor: slack/alpine
+    steps:
+      - attach_workspace:
+          at: .
+      - run: *get-mvn-version-from-file
+      - slack/approval:
+          webhook: *team-ror-releases-slackhook
+          message: *deploy-payload
 
 workflows:
   version: 2.1
