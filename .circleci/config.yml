@@ -80,7 +80,7 @@ aliases:
   - &get-mvn-version-from-file
     name: Getting release version from mvn_version file
     command: |
-      echo "export MVN_VERSION=$(cat ./mvn_version) >> $BASH_ENV
+      echo "export MVN_VERSION=$(cat ./mvn_version)" >> $BASH_ENV
   - &tag-successful-deployment
     name:
     command: |
