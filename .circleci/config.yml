@@ -36,13 +36,7 @@ aliases:
     command: |
       echo 'export GCLOUD_SERVICE_KEY="$GCLOUD_SERVICE_KEY"' >> $BASH_ENV
       /tools/docker_login.sh
-  - &post-hook
-    name: Notify about build and docker image pushed
-    command: |
-      echo 'export CIRCLE_PROJECT_REPONAME="$CIRCLE_PROJECT_REPONAME"' >> $BASH_ENV
-      echo 'export CIRCLE_SHA1="$CIRCLE_SHA1"' >> $BASH_ENV
-      echo 'export BUILD_STATUS_API_KEY="$BUILD_STATUS_API_KEY"' >> $BASH_ENV
-      /tools/build_notify.sh
+
   - &bump-versions
     name: Bump version in pom file
     command: |
@@ -98,6 +92,11 @@ aliases:
   - &team-ror-releases-slackhook
       https://hooks.slack.com/services/${SLACK_API_KEY_RELEASES}
 
+  # Use the parameter CONDITIONAL_SLACKHOOK to customize where the message gets sent
+  - &team-ror-conditional-slackhook
+      https://hooks.slack.com/services/${CONDITIONAL_SLACKHOOK}
+
+
   - &deploy-payload
       "*Ready to Deploy*: <$CIRCLE_BUILD_URL|$CIRCLE_PROJECT_REPONAME #$CIRCLE_PREVIOUS_BUILD_NUM> to *$NAMESPACE*\n
         Repository: <https://circleci.com/bb/enturas/workflows/$CIRCLE_PROJECT_REPONAME|$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME>\n
@@ -109,12 +108,44 @@ aliases:
       ":tada: Job $CIRCLE_STAGE has succeeded!\n
          Version: $MVN_VERSION \n
          User: $CIRCLE_USERNAME"
+
   - &failure-payload
       ":red_circle: Job $CIRCLE_STAGE has failed!\n
          Version: $MVN_VERSION \n
          User: $CIRCLE_USERNAME"
 
+  - &OWASP-payload
+      "Please read the full report <$CIRCLE_BUILD_URL#artifacts/containers/0|here>.\n
+         Branch: <https://circleci.com/bb/enturas/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH|$CIRCLE_BRANCH>\n
+         User: $CIRCLE_USERNAME"
+
+  ### QUALITY TESTING
+  - &read-owasp-security-report
+    name: Read the OWASP security report
+    command: |
+      REPORT_PATH="target/dependency-check-report.csv"
+      if [[ -e ${REPORT_PATH} ]]; then
+        if [[ $(<${REPORT_PATH} grep -P '\S' | wc -l ) -gt 1 ]]; then
+          echo Found dependency issues.
+          echo "export CONDITIONAL_SLACKHOOK=$SLACK_API_KEY_RELEASES" >> $BASH_ENV
+          owasp_failure_header=":warning: OWASP dependency issues found in $CIRCLE_PROJECT_REPONAME"
+          echo "export OWASP_HEADER=\"$owasp_failure_header\"" >> $BASH_ENV
+          exit 0
+        fi
+        echo "export CONDITIONAL_SLACKHOOK=$SLACK_API_KEY_CIRCLE_CI" >> $BASH_ENV
+        owasp_success_header=":tada: No OWASP dependency issues found in $CIRCLE_PROJECT_REPONAME"
+        echo "export OWASP_HEADER=\"$owasp_success_header\"" >> $BASH_ENV
+      fi
+
 commands:
+  read-owasp-report:
+    steps:
+      - run: *read-owasp-security-report
+      - slack/notify:
+          webhook: *team-ror-conditional-slackhook
+          title: "$OWASP_HEADER"
+          message: *OWASP-payload
+
   slack-status:
     parameters:
       success_payload:
@@ -235,6 +266,8 @@ workflows:
       - build:
           name: build-release
           context: org-carbon
+          post-steps:
+            - read-owasp-report
       - deploy-docker:
           context: org-carbon
           requires:
