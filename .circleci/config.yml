@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   helm: entur/helm@0.0.1
   slack: circleci/slack@2.2.0
+  owasp: entur/owasp@dev:maven
 
 executors:
   java-11:
@@ -269,12 +270,14 @@ workflows:
       - build:
           name: build-release
           context: org-carbon
-          post-steps:
-            - read-owasp-report
+      - owasp/maven_owasp_dependency_check:
+          executor: java_11
+          context: org-carbon
       - deploy-docker:
           context: org-carbon
           requires:
             - build-release
+            - owasp/maven_owasp_dependency_check
           filters:
             branches:
               only: master

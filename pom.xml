@@ -191,11 +191,13 @@
                     <failOnError>true</failOnError>
                     <outputDirectory>target/owasp-reports</outputDirectory>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
+                    <dataDirectory>~/.owasp-dependency-check</dataDirectory>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal>
+                            <!-- run only using explicit command -->
+                            <goal>none</goal>
                         </goals>
                     </execution>
                 </executions>
