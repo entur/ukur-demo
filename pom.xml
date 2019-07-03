@@ -185,10 +185,12 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>4.0.0</version>
+                <version>5.0.0</version>
                 <configuration>
-                    <format>csv</format>
-                    <failOnError>false</failOnError>
+                    <format>all</format>
+                    <failOnError>true</failOnError>
+                    <outputDirectory>target/owasp-reports</outputDirectory>
+                    <failBuildOnCVSS>7</failBuildOnCVSS>
                 </configuration>
                 <executions>
                     <execution>

@@ -96,6 +96,19 @@ aliases:
   - &team-ror-conditional-slackhook
       https://hooks.slack.com/services/${CONDITIONAL_SLACKHOOK}
 
+  - &save-test-results
+    name: Save test results
+    command: |
+      mkdir -p ~/junit/
+      find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+    when: always
+
+  - &save-owasp-reports
+    name: Save test results
+    command: |
+      mkdir -p ~/owasp-reports/
+      find . -type f -regex ".*/target/owasp-reports/.*" -exec cp {} ~/owasp-reports/ \;
+    when: always
 
   - &deploy-payload
       "*Ready to Deploy*: <$CIRCLE_BUILD_URL|$CIRCLE_PROJECT_REPONAME #$CIRCLE_PREVIOUS_BUILD_NUM> to *$NAMESPACE*\n
@@ -174,16 +187,16 @@ jobs:
       # Cannot use -o because of snapshot dependencies.
       - run: *get-version-from-pom
       - run: mvn install -s /tools/m2/settings.xml
-      - run:
-          name: Save test results
-          command: |
-            mkdir -p ~/junit/
-            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-          when: always
+      - run: *save-test-results
       - store_test_results:
           path: ~/junit
       - store_artifacts:
           path: ~/junit
+      - run: *save-owasp-reports
+      - store_owasp_reports:
+          path: ~/owasp-reports
+      - store_artifacts:
+          path: ~/owasp-report
       - persist_to_workspace:
           root: ~/project
           paths:
