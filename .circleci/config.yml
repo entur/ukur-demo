@@ -3,6 +3,7 @@ version: 2.1
 orbs:
   helm: entur/helm@0.0.1
   slack: circleci/slack@2.2.0
+  clair: ovotech/clair-scanner@1.4.25
 
 executors:
   java-11:
@@ -145,6 +146,19 @@ aliases:
         echo "export OWASP_HEADER=\"$owasp_success_header\"" >> $BASH_ENV
       fi
 
+  - &read-container-vulnerability-scan-report
+    name: Read the container vulnerability report
+    command: |
+      for line in $(find /clair-reports -type f -iname '*.json'); do
+        unapproved=`grep -Pzo '"unapproved":\s\[\s*\K([\s,0-9\"A-Z\-]*)' "$line" | tr -d ' "\n\0'`
+        if [[ $(echo "$unapproved" | wc -c) -gt 1 ]]; then
+          echo Found unapproved vulernabilities in $line.
+          echo "export CONTAINER_VULNERABILITES=$unapproved" >> $BASH_ENV
+        else echo No unapproved vulernabilities in $line.
+        fi
+      done
+    when: on_fail
+
 commands:
   read-owasp-report:
     steps:
@@ -196,7 +210,7 @@ jobs:
             - helm/*/
             - ./mvn_version
       - slack-status
-  deploy-docker:
+  publish-docker:
     executor: cci-toolbox-java11
     steps:
       - attach_workspace:
@@ -212,8 +226,12 @@ jobs:
       - run: *GCP-auth
       - run: *docker-login
       - run:
-          name: Docker build and push
-          command: mvn docker:build docker:push -s /tools/m2/settings.xml
+          name: Docker build, save and push
+          command: mvn docker:build docker:save -Ddocker.file=gcr.image.version docker:push -s /tools/m2/settings.xml
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - ./gcr.image.version
       - slack-status
 
   prepare-next-release:
@@ -262,6 +280,21 @@ jobs:
           webhook: *team-ror-releases-slackhook
           message: *deploy-payload
 
+  container_vulnerability_scan:
+    executor: clair/default
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: *docker-login
+      - clair/scan:
+          image_file: "./gcr.image.version"
+      - run: *read-container-vulnerability-scan-report
+      - slack/status:
+          fail_only: "true"
+          failure_message: "Docker image contains new and/or unapproved vulnerabilities: $CONTAINER_VULNERABILITES"
+          webhook: *team-ror-circleci-slackhook
+
 workflows:
   version: 2.1
   release:
@@ -271,17 +304,21 @@ workflows:
           context: org-carbon
           post-steps:
             - read-owasp-report
-      - deploy-docker:
+      - publish-docker:
           context: org-carbon
           requires:
             - build-release
           filters:
             branches:
               only: master
+      - container_vulnerability_scan:
+          context: org-carbon
+          requires:
+            - publish-docker
       - prepare-next-release:
           context: org-carbon
           requires:
-            - deploy-docker
+            - publish-docker
       - deploy:
           name: deploy-dev-release
           context: org-carbon
