@@ -97,7 +97,7 @@
         <dependency>
             <groupId>org.entur</groupId>
             <artifactId>siri-java-model</artifactId>
-            <version>0.13-SNAPSHOT</version>
+            <version>0.12</version>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
