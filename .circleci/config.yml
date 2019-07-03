@@ -321,3 +321,17 @@ workflows:
           context: org-dev
           requires:
             - prepare-next-release
+      - slack-approval:
+          name: staging-deploy-message-release
+          context: org-stage
+          requires:
+            - deploy-dev-release
+      - approve-staging-release:
+          type: approval
+          requires:
+            - staging-deploy-message-release
+      - deploy:
+          name: deploy-staging-release
+          context: org-stage
+          requires:
+            - approve-staging-release
