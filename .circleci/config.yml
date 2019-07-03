@@ -8,20 +8,20 @@ orbs:
 executors:
   java-11:
     docker:
-    - image: circleci/openjdk:11-jdk
-      environment:
-        _JAVA_OPTIONS: -Xmx1024m
-        TERM: dumb
-        TZ: "/usr/share/zoneinfo/Europe/Stockholm"
+      - image: circleci/openjdk:11-jdk
+        environment:
+          _JAVA_OPTIONS: -Xmx1024m
+          TERM: dumb
+          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
   entur-cci-toolbox:
     docker:
       - image: entur/cci-toolbox:2.0
   cci-toolbox-java11:
     docker:
-    - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
-      auth:
-        username: _json_key
-        password: $GCLOUD_SERVICE_KEY
+      - image: eu.gcr.io/carbon-1287/circleci-toolbox-image-java11
+        auth:
+          username: _json_key
+          password: $GCLOUD_SERVICE_KEY
     environment:
       DEBIAN_FRONTEND: "noninteractive"
 aliases:
@@ -178,6 +178,18 @@ commands:
           webhook: *team-ror-circleci-slackhook
           success_message: << parameters.success_payload >>
           failure_message: *failure-payload
+
+  save-image-name:
+    parameters:
+      image-version:
+        type: string
+        default: release-$MVN_VERSION
+    steps:
+      - run:
+          command: echo "$DOCKER_REGISTRY/$CIRCLE_PROJECT_REPONAME:<< parameters.image-version >>" > ./gcr.image.version
+      - persist_to_workspace:
+          root: .
+          paths: ./gcr.image.version
 jobs:
   build:
     executor: cci-toolbox-java11
@@ -216,20 +228,16 @@ jobs:
           key: dep-cache-{{ checksum "pom.xml" }}
       - save_cache:
           paths:
-           - ~/.m2
+            - ~/.m2
           key: dep-cache-{{ checksum "pom.xml" }}
       - setup_remote_docker:
           docker_layer_caching: true
       - run: *GCP-auth
       - run: *docker-login
+      - run: *get-mvn-version-from-file
       - run:
           name: Docker build, save and push
-          command: mvn docker:build docker:save -Ddocker.file=gcr.image.version docker:push -s /tools/m2/settings.xml
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - ./gcr.image.version
-      - slack-status
+          command: mvn docker:build docker:push -s /tools/m2/settings.xml
 
   prepare-next-release:
     executor: cci-toolbox-java11
@@ -308,6 +316,10 @@ workflows:
           filters:
             branches:
               only: master
+          post-steps:
+            - save-image-name:
+                image-version: release-$MVN_VERSION
+            - slack-status
       - container_vulnerability_scan:
           context: org-dev
           requires:
