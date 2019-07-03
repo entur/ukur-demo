@@ -33,10 +33,8 @@ aliases:
       gcloud --quiet container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER
 
   - &docker-login
-    name: Docker login
-    command: |
-      docker login -u _json_key --password-stdin https://eu.gcr.io <<< "${GCLOUD_SERVICE_KEY}"
-
+    name: Login with docker on gcloud
+    command: docker login -u _json_key -p "${GCLOUD_SERVICE_KEY}" https://eu.gcr.io
   - &bump-versions
     name: Bump version in pom file
     command: |
