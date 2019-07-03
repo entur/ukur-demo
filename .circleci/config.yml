@@ -271,7 +271,7 @@ workflows:
           name: build-release
           context: org-carbon
       - owasp/maven_owasp_dependency_check:
-          executor: java_11
+          executor: java-11
           context: org-carbon
       - deploy-docker:
           context: org-carbon
