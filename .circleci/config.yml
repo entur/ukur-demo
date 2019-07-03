@@ -142,7 +142,7 @@ commands:
     steps:
       - run: *read-owasp-security-report
       - slack/notify:
-          webhook: *team-ror-conditional-slackhook
+          webhook: *team-ror-circleci-slackhook
           title: "$OWASP_HEADER"
           message: *OWASP-payload
 
