@@ -298,26 +298,26 @@ workflows:
     jobs:
       - build:
           name: build-release
-          context: org-carbon
+          context: org-dev
           post-steps:
             - read-owasp-report
       - publish-docker:
-          context: org-carbon
+          context: org-dev
           requires:
             - build-release
           filters:
             branches:
               only: master
       - container_vulnerability_scan:
-          context: org-carbon
+          context: org-dev
           requires:
             - publish-docker
       - prepare-next-release:
-          context: org-carbon
+          context: org-dev
           requires:
             - publish-docker
       - deploy:
           name: deploy-dev-release
-          context: org-carbon
+          context: org-dev
           requires:
             - prepare-next-release
