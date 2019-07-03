@@ -190,7 +190,7 @@
                     <format>all</format>
                     <failOnError>true</failOnError>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
-                    <dataDirectory>~/.owasp-dependency-check</dataDirectory>
+                    <dataDirectory>${user.home}/.owasp-dependency-check</dataDirectory>
                 </configuration>
                 <executions>
                     <execution>
