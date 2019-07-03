@@ -99,15 +99,10 @@ aliases:
   - &save-test-results
     name: Save test results
     command: |
-      mkdir -p ~/junit/
-      find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-    when: always
+      mkdir -p ~/reports/{junit,owasp}
+      find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/reports/junit/ \;
+      find . -type f -regex ".*/target/owasp-reports/.*" -exec cp {} ~/reports/owasp/ \;
 
-  - &save-owasp-reports
-    name: Save test results
-    command: |
-      mkdir -p ~/owasp-reports/
-      find . -type f -regex ".*/target/owasp-reports/.*" -exec cp {} ~/owasp-reports/ \;
     when: always
 
   - &deploy-payload
@@ -189,14 +184,9 @@ jobs:
       - run: mvn install -s /tools/m2/settings.xml
       - run: *save-test-results
       - store_test_results:
-          path: ~/junit
+          path: ~/reports
       - store_artifacts:
-          path: ~/junit
-      - run: *save-owasp-reports
-      - store_owasp_reports:
-          path: ~/owasp-reports
-      - store_artifacts:
-          path: ~/owasp-report
+          path: ~/reports
       - persist_to_workspace:
           root: ~/project
           paths:
