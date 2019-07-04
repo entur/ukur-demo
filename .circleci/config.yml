@@ -4,6 +4,7 @@ orbs:
   helm: entur/helm@0.0.1
   slack: circleci/slack@2.2.0
   clair: ovotech/clair-scanner@1.4.25
+  owasp: entur/owasp@0.0.3
 
 executors:
   java-11:
@@ -307,11 +308,15 @@ workflows:
       - build:
           name: build-release
           context: dev
+      - owasp/maven_owasp_dependency_check:
+          executor: java-11
+          context: org-carbon
           post-steps:
             - read-owasp-report
       - publish-docker:
           context: dev
           requires:
+            - owasp/maven_owasp_dependency_check
             - build-release
           filters:
             branches:

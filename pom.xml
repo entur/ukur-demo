@@ -185,17 +185,17 @@
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>5.0.0</version>
+                <version>5.1.0</version>
                 <configuration>
                     <format>all</format>
                     <failOnError>true</failOnError>
-                    <outputDirectory>target/owasp-reports</outputDirectory>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                 </configuration>
                 <executions>
                     <execution>
                         <goals>
-                            <goal>check</goal>
+                            <!-- run only using explicit command -->
+                            <goal>none</goal>
                         </goals>
                     </execution>
                 </executions>
