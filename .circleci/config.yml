@@ -311,6 +311,7 @@ workflows:
       - owasp/maven_owasp_dependency_check:
           executor: java-11
           context: org-carbon
+          settings_file: /tools/m2/settings.xml
           post-steps:
             - read-owasp-report
       - publish-docker:
