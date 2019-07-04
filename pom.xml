@@ -97,6 +97,7 @@
             <artifactId>logstash-logback-encoder</artifactId>
             <version>5.3</version>
         </dependency>
+
         <dependency>
             <groupId>org.entur</groupId>
             <artifactId>siri-java-model</artifactId>
