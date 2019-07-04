@@ -293,7 +293,7 @@ jobs:
           at: .
       - run: *docker-login
       - clair/scan:
-          image_file: "project/gcr.image.version"
+          image_file: "gcr.image.version"
       - run: *read-container-vulnerability-scan-report
       - slack/status:
           fail_only: "true"
@@ -306,11 +306,11 @@ workflows:
     jobs:
       - build:
           name: build-release
-          context: org-dev
+          context: dev
           post-steps:
             - read-owasp-report
       - publish-docker:
-          context: org-dev
+          context: dev
           requires:
             - build-release
           filters:
@@ -321,21 +321,21 @@ workflows:
                 image-version: release-$MVN_VERSION
             - slack-status
       - container_vulnerability_scan:
-          context: org-dev
+          context: dev
           requires:
             - publish-docker
       - prepare-next-release:
-          context: org-dev
+          context: dev
           requires:
             - publish-docker
       - deploy:
           name: deploy-dev-release
-          context: org-dev
+          context: dev
           requires:
             - prepare-next-release
       - slack-approval:
           name: staging-deploy-message-release
-          context: org-stage
+          context: stage
           requires:
             - deploy-dev-release
       - approve-staging-release:
@@ -344,6 +344,6 @@ workflows:
             - staging-deploy-message-release
       - deploy:
           name: deploy-staging-release
-          context: org-stage
+          context: stage
           requires:
             - approve-staging-release
