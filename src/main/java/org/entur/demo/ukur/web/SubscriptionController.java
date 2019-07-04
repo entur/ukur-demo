@@ -29,6 +29,8 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Collection;
 
 @Controller
@@ -59,7 +61,10 @@ public class SubscriptionController {
 
     @ModelAttribute("buildVersion")
     public String buildVersion() {
-        return buildProperties.getVersion();
+        final String buildTime = LocalDateTime.ofInstant(buildProperties.getTime(), ZoneId.systemDefault()).toString();
+        final String name = buildProperties.getName();
+        final String version = buildProperties.getVersion();
+        return "build-name: " + name + ", build-version: " + version + ", build-time: " + buildTime;
     }
 
     @RequestMapping({"/", "subscriptions"})
