@@ -142,6 +142,7 @@ of the Licence.
 Such a termination will not terminate the licences of any person who has received the Work from the Licensee under
 the Licence, provided such persons remain in full compliance with the Licence.
 
+
 13.Miscellaneous
 Without prejudice of Article 9 above, the Licence represents the complete agreement between the Parties as to the
 Work.
