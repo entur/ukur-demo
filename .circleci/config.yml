@@ -39,7 +39,7 @@ jobs:
            -Dsonar.projectKey=enturas_${CIRCLE_PROJECT_REPONAME} \
            -Dsonar.organization=c97wdh7gfp72 \
            -Dsonar.projectName=${CIRCLE_PROJECT_REPONAME} \
-           -Dsonar.branch.name=${CIRCLE_BRANCH} \
+#           -Dsonar.branch.name=${CIRCLE_BRANCH} \
            -Dsonar.host.url=https://sonarcloud.io \
            -Dsonar.login=5ca4b44b505eee3b2e2b65fe206fc30338c24d33
 
