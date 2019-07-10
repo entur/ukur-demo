@@ -32,22 +32,33 @@ jobs:
         key: dep-cache-{{ checksum "pom.xml" }}
     # Cannot use -o because of snapshot dependencies.
     - run: mvn install -s /tools/m2/settings.xml
-    - run:
-        name: Save test results
+    - run: 
+        name: Sonar scan
         command: |
-          mkdir -p ~/junit/
-          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
-        when: always
-    - store_test_results:
-        path: ~/junit
-    - store_artifacts:
-        path: ~/junit
-    - persist_to_workspace:
-        root: ~/project
-        paths:
-        - target
-        - pom.xml
-        - .circleci
+         mvn sonar:sonar \
+           -Dsonar.projectKey=enturas_${CIRCLE_PROJECT_REPONAME} \
+           -Dsonar.organization=c97wdh7gfp72 \
+           -Dsonar.projectName=${CIRCLE_PROJECT_REPONAME} \
+           -Dsonar.branch.name=${CIRCLE_BRANCH} \
+           -Dsonar.host.url=https://sonarcloud.io \
+           -Dsonar.login=5ca4b44b505eee3b2e2b65fe206fc30338c24d33
+
+#    - run:
+#        name: Save test results
+#        command: |
+#          mkdir -p ~/junit/
+#          find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+#        when: always
+#    - store_test_results:
+#        path: ~/junit
+#    - store_artifacts:
+#        path: ~/junit
+#    - persist_to_workspace:
+#        root: ~/project
+#        paths:
+#        - target
+#        - pom.xml
+#        - .circleci
   deploy-docker:
     docker:
     - image: $DOCKER_REGISTRY/circleci-toolbox-image-java11
@@ -74,10 +85,10 @@ workflows:
     jobs:
     - build:
         context: org-carbon
-    - deploy-docker:
-        context: org-carbon
-        requires:
-        - build
+#    - deploy-docker:
+#        context: org-carbon
+#        requires:
+#        - build
 #        filters:
 #          branches:
 #            only: master
