@@ -35,12 +35,13 @@ jobs:
     - run: 
         name: Sonar scan
         command: |
-         mvn sonar:sonar \
-           -Dsonar.projectKey=enturas_${CIRCLE_PROJECT_REPONAME} \
-           -Dsonar.organization=c97wdh7gfp72 \
-           -Dsonar.projectName=${CIRCLE_PROJECT_REPONAME} \
-           -Dsonar.host.url=https://sonarcloud.io \
-           -Dsonar.login=${SONAR_PASSWORD}
+          mvn sonar:sonar \
+            -Dsonar.projectKey=${CIRCLE_PROJECT_REPONAME} \
+            -Dsonar.organization=enturas-github \
+            -Dsonar.projectName=${CIRCLE_PROJECT_REPONAME} \
+            -Dsonar.branch.name=${CIRCLE_BRANCH} \
+            -Dsonar.host.url=https://sonarcloud.io \
+            -Dsonar.login=${SONAR_PASSWORD}
 
 #    - run:
 #        name: Save test results
