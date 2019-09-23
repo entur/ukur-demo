@@ -67,6 +67,7 @@ public class Subscription implements Serializable, Comparable {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSSZ")
     private String initialTerminationTime;
     private String heartbeatInterval = null;
+    private String maxArrivalDelay = null;
     @JsonIgnore
     private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     @JsonIgnore
@@ -199,6 +200,14 @@ public class Subscription implements Serializable, Comparable {
 
     public void setHeartbeatInterval(String heartbeatInterval) {
         this.heartbeatInterval = heartbeatInterval;
+    }
+
+    public String getMaxArrivalDelay() {
+        return maxArrivalDelay;
+    }
+
+    public void setMaxArrivalDelay(String maxArrivalDelay) {
+        this.maxArrivalDelay = maxArrivalDelay;
     }
 
     public boolean isPushAllData() {

@@ -44,6 +44,7 @@ public class SubscriptionTest {
         Subscription s = new Subscription();
         s.setInitialTerminationTime(ZonedDateTime.now().plusWeeks(1));
         s.setHeartbeatInterval("PT10M");
+        s.setMaxArrivalDelay("PT30M");
         s.setName("My Test Subscription");
         s.setType(SubscriptionTypeEnum.ALL);
         s.setPushAddress("http://someserver:someport/push");
@@ -62,6 +63,7 @@ public class SubscriptionTest {
         assertNotNull(jsonSubscription);
         assertEquals(s.getInitialTerminationTime(), jsonSubscription.getInitialTerminationTime());
         assertEquals(s.getHeartbeatInterval(), jsonSubscription.getHeartbeatInterval());
+        assertEquals(s.getMaxArrivalDelay(),jsonSubscription.getMaxArrivalDelay());
         assertEquals(s.getName(), jsonSubscription.getName());
         assertEquals(s.getType(), jsonSubscription.getType());
         assertEquals(s.isUseSiriSubscriptionModel(), jsonSubscription.isUseSiriSubscriptionModel());

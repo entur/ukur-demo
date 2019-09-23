@@ -118,7 +118,7 @@ public class SubscriptionService {
 
     private void addTestSubscriptions() {
         Subscription askerOslo1 = new Subscription();
-        askerOslo1.setName("Asker-OsloS #1");
+        askerOslo1.setName("Asker-OsloS #1 with 30 minutes max arrival delay limit");
         askerOslo1.addFromStopPoint("NSR:StopPlace:418");
         askerOslo1.addFromStopPoint("NSR:Quay:695");
         askerOslo1.addFromStopPoint("NSR:Quay:696");
@@ -146,14 +146,47 @@ public class SubscriptionService {
         askerOslo1.addToStopPoint("NSR:Quay:565");
         askerOslo1.addToStopPoint("NSR:Quay:570");
         askerOslo1.addToStopPoint("NSR:Quay:571");
+        askerOslo1.setMaxArrivalDelay("PT30M");
         add(askerOslo1);
 
+
         Subscription askerOslo2 = new Subscription();
-        askerOslo2.setName("[SIRI] Asker-OsloS #2 (stopplace only)");
+        askerOslo2.setName("Asker-OsloS #2 without max arrival delay limit");
         askerOslo2.addFromStopPoint("NSR:StopPlace:418");
+        askerOslo2.addFromStopPoint("NSR:Quay:695");
+        askerOslo2.addFromStopPoint("NSR:Quay:696");
+        askerOslo2.addFromStopPoint("NSR:Quay:697");
+        askerOslo2.addFromStopPoint("NSR:Quay:698");
+        askerOslo2.addFromStopPoint("NSR:Quay:699");
+        askerOslo2.addFromStopPoint("NSR:Quay:700");
         askerOslo2.addToStopPoint("NSR:StopPlace:337");
-        askerOslo2.setUseSiriSubscriptionModel(true);
+        askerOslo2.addToStopPoint("NSR:Quay:550");
+        askerOslo2.addToStopPoint("NSR:Quay:551");
+        askerOslo2.addToStopPoint("NSR:Quay:553");
+        askerOslo2.addToStopPoint("NSR:Quay:554");
+        askerOslo2.addToStopPoint("NSR:Quay:555");
+        askerOslo2.addToStopPoint("NSR:Quay:556");
+        askerOslo2.addToStopPoint("NSR:Quay:563");
+        askerOslo2.addToStopPoint("NSR:Quay:557");
+        askerOslo2.addToStopPoint("NSR:Quay:559");
+        askerOslo2.addToStopPoint("NSR:Quay:561");
+        askerOslo2.addToStopPoint("NSR:Quay:562");
+        askerOslo2.addToStopPoint("NSR:Quay:564");
+        askerOslo2.addToStopPoint("NSR:Quay:566");
+        askerOslo2.addToStopPoint("NSR:Quay:567");
+        askerOslo2.addToStopPoint("NSR:Quay:568");
+        askerOslo2.addToStopPoint("NSR:Quay:569");
+        askerOslo2.addToStopPoint("NSR:Quay:565");
+        askerOslo2.addToStopPoint("NSR:Quay:570");
+        askerOslo2.addToStopPoint("NSR:Quay:571");
         add(askerOslo2);
+
+        Subscription askerOslo3 = new Subscription();
+        askerOslo3.setName("[SIRI] Asker-OsloS #3 (stopplace only)");
+        askerOslo3.addFromStopPoint("NSR:StopPlace:418");
+        askerOslo3.addToStopPoint("NSR:StopPlace:337");
+        askerOslo3.setUseSiriSubscriptionModel(true);
+        add(askerOslo3);
 
         Subscription osloTilAsker1 = new Subscription();
         osloTilAsker1.setName("OsloS-Asker #1");
@@ -184,6 +217,7 @@ public class SubscriptionService {
         osloTilAsker1.addToStopPoint("NSR:Quay:698");
         osloTilAsker1.addToStopPoint("NSR:Quay:699");
         osloTilAsker1.addToStopPoint("NSR:Quay:700");
+        askerOslo1.setMaxArrivalDelay("PT30M");
         add(osloTilAsker1);
 
         Subscription osloAsker2 = new Subscription();
@@ -204,6 +238,7 @@ public class SubscriptionService {
         Subscription ruterLine1 = new Subscription();
         ruterLine1.setName("Ruter Line 1");
         ruterLine1.addLineRef("RUT:Line:1");
+        askerOslo1.setMaxArrivalDelay("PT30M");
         add(ruterLine1);
 
         Subscription ruterSX = new Subscription();
