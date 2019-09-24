@@ -47,6 +47,7 @@ public class SubscriptionTest {
         s.setMaxArrivalDelay("PT30M");
         s.setName("My Test Subscription");
         s.setType(SubscriptionTypeEnum.ALL);
+        s.setDeviationType(DeviationType.DELAYED);
         s.setPushAddress("http://someserver:someport/push");
         s.setUseSiriSubscriptionModel(true);
         s.addCodespace("BNR");
@@ -66,6 +67,7 @@ public class SubscriptionTest {
         assertEquals(s.getMaxArrivalDelay(),jsonSubscription.getMaxArrivalDelay());
         assertEquals(s.getName(), jsonSubscription.getName());
         assertEquals(s.getType(), jsonSubscription.getType());
+        assertEquals(s.getDeviationType(), jsonSubscription.getDeviationType());
         assertEquals(s.isUseSiriSubscriptionModel(), jsonSubscription.isUseSiriSubscriptionModel());
         assertThat(jsonSubscription.getCodespaces(), containsInAnyOrder(s.getCodespaces().toArray()));
         assertThat(jsonSubscription.getLineRefs(), containsInAnyOrder(s.getLineRefs().toArray()));

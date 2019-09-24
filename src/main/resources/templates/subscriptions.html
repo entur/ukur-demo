@@ -291,6 +291,17 @@
             </div>
 
             <div class="form-group">
+                <label class="control-label col-sm-2">Deviation Type</label>
+                <div class="col-sm-10">
+                    <select type="text" th:field="*{deviationType}">
+                        <option value="ALL">ALL</option>
+                        <option value="DELAYED">DELAYED</option>
+                        <option value="TRACK_CHANGE">TRACK_CHANGE</option>
+                        <option value="CANCELED">CANCELED</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
                 <label class="control-label col-sm-2">SIRI Subscription Model</label>
                 <div class="col-sm-10">
                     <p>

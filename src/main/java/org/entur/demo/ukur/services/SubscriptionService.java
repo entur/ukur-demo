@@ -15,6 +15,7 @@
 
 package org.entur.demo.ukur.services;
 
+import org.entur.demo.ukur.entities.DeviationType;
 import org.entur.demo.ukur.entities.Subscription;
 import org.entur.demo.ukur.entities.SubscriptionTypeEnum;
 import org.slf4j.Logger;
@@ -147,6 +148,7 @@ public class SubscriptionService {
         askerOslo1.addToStopPoint("NSR:Quay:570");
         askerOslo1.addToStopPoint("NSR:Quay:571");
         askerOslo1.setMaxArrivalDelay("PT30M");
+        askerOslo1.setDeviationType(DeviationType.DELAYED);
         add(askerOslo1);
 
 
@@ -217,7 +219,7 @@ public class SubscriptionService {
         osloTilAsker1.addToStopPoint("NSR:Quay:698");
         osloTilAsker1.addToStopPoint("NSR:Quay:699");
         osloTilAsker1.addToStopPoint("NSR:Quay:700");
-        askerOslo1.setMaxArrivalDelay("PT30M");
+
         add(osloTilAsker1);
 
         Subscription osloAsker2 = new Subscription();

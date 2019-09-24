@@ -58,6 +58,7 @@ public class Subscription implements Serializable, Comparable {
     private ArrayList<String> lineRefs = new ArrayList<>();
     private ArrayList<String> codespaces = new ArrayList<>();
     private SubscriptionTypeEnum type = SubscriptionTypeEnum.ALL;
+    private DeviationType deviationType = DeviationType.ALL;
     private boolean useSiriSubscriptionModel = false;
     private boolean pushAllData = false;
     @JsonIgnore
@@ -164,6 +165,14 @@ public class Subscription implements Serializable, Comparable {
 
     public void setType(SubscriptionTypeEnum type) {
         this.type = type;
+    }
+
+    public DeviationType getDeviationType() {
+        return deviationType;
+    }
+
+    public void setDeviationType(DeviationType deviationType) {
+        this.deviationType = deviationType;
     }
 
     public boolean isUseSiriSubscriptionModel() {

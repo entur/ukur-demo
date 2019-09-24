@@ -45,6 +45,6 @@
     </appender>
     <logger name="org.entur" level="DEBUG"/>
     <root level="INFO">
-        <appender-ref ref="${logback-appender:-console}"/>
+        <appender-ref ref="${logback-appender:-localdev}"/>
     </root>
 </configuration>
