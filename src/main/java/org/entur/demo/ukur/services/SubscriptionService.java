@@ -119,7 +119,7 @@ public class SubscriptionService {
 
     private void addTestSubscriptions() {
         Subscription askerOslo1 = new Subscription();
-        askerOslo1.setName("Asker-OsloS #1 with 30 minutes max arrival delay limit");
+        askerOslo1.setName("Asker-OsloS #1 with 30 minutes minimum arrival delay limit");
         askerOslo1.addFromStopPoint("NSR:StopPlace:418");
         askerOslo1.addFromStopPoint("NSR:Quay:695");
         askerOslo1.addFromStopPoint("NSR:Quay:696");
@@ -147,13 +147,13 @@ public class SubscriptionService {
         askerOslo1.addToStopPoint("NSR:Quay:565");
         askerOslo1.addToStopPoint("NSR:Quay:570");
         askerOslo1.addToStopPoint("NSR:Quay:571");
-        askerOslo1.setMaxArrivalDelay("PT30M");
+        askerOslo1.setMinimumDelay("PT30M");
         askerOslo1.setDeviationType(DeviationType.DELAYED);
         add(askerOslo1);
 
 
         Subscription askerOslo2 = new Subscription();
-        askerOslo2.setName("Asker-OsloS #2 without max arrival delay limit");
+        askerOslo2.setName("Asker-OsloS #2 without minimum arrival delay limit");
         askerOslo2.addFromStopPoint("NSR:StopPlace:418");
         askerOslo2.addFromStopPoint("NSR:Quay:695");
         askerOslo2.addFromStopPoint("NSR:Quay:696");
@@ -240,7 +240,7 @@ public class SubscriptionService {
         Subscription ruterLine1 = new Subscription();
         ruterLine1.setName("Ruter Line 1");
         ruterLine1.addLineRef("RUT:Line:1");
-        askerOslo1.setMaxArrivalDelay("PT30M");
+        askerOslo1.setMinimumDelay("PT30M");
         add(ruterLine1);
 
         Subscription ruterSX = new Subscription();
