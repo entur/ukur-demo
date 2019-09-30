@@ -97,9 +97,7 @@ aliases:
   - &save-test-results
     name: Save test results
     command: |
-      mkdir -p ~/reports/{junit,owasp}
       find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/reports/junit/ \;
-      find . -type f -regex ".*/target/owasp-reports/.*" -exec cp {} ~/reports/owasp/ \;
 
     when: always
 
@@ -120,29 +118,8 @@ aliases:
          Version: $MVN_VERSION \n
          User: $CIRCLE_USERNAME"
 
-  - &OWASP-payload
-      "Please read the full report <$CIRCLE_BUILD_URL#artifacts/containers/0|here>.\n
-         Branch: <https://circleci.com/bb/enturas/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH|$CIRCLE_BRANCH>\n
-         User: $CIRCLE_USERNAME"
 
   ### QUALITY TESTING
-  - &read-owasp-security-report
-    name: Read the OWASP security report
-    command: |
-      REPORT_PATH="target/dependency-check-report.csv"
-      if [[ -e ${REPORT_PATH} ]]; then
-        if [[ $(<${REPORT_PATH} grep -P '\S' | wc -l ) -gt 1 ]]; then
-          echo Found dependency issues.
-          echo "export CONDITIONAL_SLACKHOOK=$SLACK_API_KEY_RELEASES" >> $BASH_ENV
-          owasp_failure_header=":warning: OWASP dependency issues found in $CIRCLE_PROJECT_REPONAME"
-          echo "export OWASP_HEADER=\"$owasp_failure_header\"" >> $BASH_ENV
-          exit 0
-        fi
-        echo "export CONDITIONAL_SLACKHOOK=$SLACK_API_KEY_CIRCLE_CI" >> $BASH_ENV
-        owasp_success_header=":tada: No OWASP dependency issues found in $CIRCLE_PROJECT_REPONAME"
-        echo "export OWASP_HEADER=\"$owasp_success_header\"" >> $BASH_ENV
-      fi
-
   - &read-container-vulnerability-scan-report
     name: Read the container vulnerability report
     command: |
@@ -157,14 +134,6 @@ aliases:
     when: on_fail
 
 commands:
-  read-owasp-report:
-    steps:
-      - run: *read-owasp-security-report
-      - slack/notify:
-          webhook: *team-ror-circleci-slackhook
-          title: "$OWASP_HEADER"
-          message: *OWASP-payload
-
   slack-status:
     parameters:
       success_payload:
@@ -307,8 +276,6 @@ workflows:
       - build:
           name: build-release
           context: dev
-          post-steps:
-            - read-owasp-report
       - publish-docker:
           context: dev
           requires:

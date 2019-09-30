@@ -182,24 +182,6 @@
                     </images>
                 </configuration>
             </plugin>
-           <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>5.0.0</version>
-                <configuration>
-                    <format>all</format>
-                    <failOnError>true</failOnError>
-                    <outputDirectory>target/owasp-reports</outputDirectory>
-                    <failBuildOnCVSS>9</failBuildOnCVSS>
-                </configuration>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
         </plugins>
     </build>
 </project>
