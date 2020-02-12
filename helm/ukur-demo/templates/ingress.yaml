@@ -1,40 +1,26 @@
+{{- if .Values.ingress.enabled }}
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
   annotations:
-    {{- if eq eq .Values.env "dev" }}
-    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.dev }}
-    {{- else if eq .Values.env "staging" }}
-    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.staging }}
-    {{- else if .Values.env "production" }}
-    external-dns.alpha.kubernetes.io/target: {{ .Values.externalDns.ingressLoadBalancerIP.production }}
-    {{- end }}
     kubernetes.io/ingress.class: traefik
-  name: {{ .Release.Name }}-{{ .Values.api }}
+    {{- if eq .Values.env "production"}}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.productionIp }}
+    {{ else if eq .Values.env "staging"}}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.stagingIp }}
+    {{ else if eq .Values.env "dev"}}
+    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.devIp }}
+    {{- end}}
+  name: ukur-demo-realtime-deviations-demo-v1
   namespace: {{ .Release.Namespace }}
 spec:
   rules:
-    {{- if eq eq .Values.env "dev" }}
-    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.dev.entur.io
-    {{- else if eq .Values.env "staging" }}
-    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.staging.entur.io
-    {{- else if eq .Values.env "production" }}
-    - host: {{ .Values.app }}-{{ .Values.api }}-{{ .Release.Namespace }}.entur.io
-    {{- end }}
-      http:
-        paths:
-        - backend:
-            serviceName: {{ .Release.Name }}
-            servicePort: {{ .Values.service.externalPort }}
-
-
-
-            {{- if eq .Values.env "production"}}
-            external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.productionIp }}
-            {{ else if eq .Values.env "staging"}}
-            external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.stagingIp }}
-            {{ else if eq .Values.env "dev"}}
-            external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.devIp }}
-            {{- end}}
+  - host: ukur-demo-realtime-deviations-demo-v1-{{ .Release.Namespace }}.{{ .Release.Namespace }}.entur.io
+  http:
+    paths:
+      - backend:
+          serviceName: {{ .Release.Name }}
+          servicePort: {{ .Values.service.externalPort }}
+  {{- end }}

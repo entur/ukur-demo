@@ -23,10 +23,9 @@ resources:
   memRequest: 512Mi
   xmx: 1024m
 
-# Environment Specific
-externalDns:
-  ingressLoadBalancerIP: 
-    dev: "35.195.223.29"
-    staging: "35.195.146.93"
-    production: "35.187.15.14"
+ingress:
+  enabled: true
+  devIp: 35.195.223.29
+  stagingIp: 35.195.146.93
+  productionIp: 35.187.15.14
 
