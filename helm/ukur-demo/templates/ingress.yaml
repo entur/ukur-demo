@@ -13,14 +13,14 @@ metadata:
     {{ else if eq .Values.env "dev"}}
     external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.devIp }}
     {{- end}}
-  name: ukur-demo-realtime-deviations-demo-v1
+  name: realtime-deviations-demo-v1
   namespace: {{ .Release.Namespace }}
 spec:
   rules:
-  - host: ukur-demo-realtime-deviations-demo-v1-{{ .Release.Namespace }}.{{ .Release.Namespace }}.entur.io
-  http:
-    paths:
-      - backend:
-          serviceName: {{ .Release.Name }}
-          servicePort: {{ .Values.service.externalPort }}
+    - host: realtime-deviations-demo-v1-{{ .Release.Namespace }}.{{ .Release.Namespace }}.entur.io
+      http:
+        paths:
+          - backend:
+              serviceName: {{ template "ukur-demo.name" . }}
+              servicePort: {{ .Values.service.http.externalPort }}
   {{- end }}

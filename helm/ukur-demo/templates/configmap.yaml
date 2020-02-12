@@ -1,8 +1,9 @@
-apiVersion: v1
+apiVersion: extensions/v1beta1
 data:
   application.properties: |+
     ukur.subscription.url=http://ukur/external/subscription
     push.baseurl=http://ukur-demo/push
+    server.port=8090
 kind: ConfigMap
 metadata:
   name: {{ .Release.Name }}
