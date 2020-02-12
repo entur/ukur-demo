@@ -36,11 +36,6 @@
         <jaxb-impl-version>2.3.0.1</jaxb-impl-version>
         <javax.activation.version>1.2.0</javax.activation.version>
         <maven.compiler.plugin.version>3.8.0</maven.compiler.plugin.version>
-        <docker.maven.plugin.version>0.30.0</docker.maven.plugin.version>
-        <docker.from>eu.gcr.io/entur-system-1287/openjdk11-base-image</docker.from>
-        <fabric8.dockerUser>entur-system-1287/</fabric8.dockerUser>
-        <docker.image>eu.gcr.io/${fabric8.dockerUser}${project.artifactId}:release-${project.version}</docker.image>
-        <docker.cleanup>none</docker.cleanup>
     </properties>
 
     <parent>
@@ -156,31 +151,6 @@
                         </goals>
                     </execution>
                 </executions>
-            </plugin>
-
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>${docker.maven.plugin.version}</version>
-                <configuration>
-                    <autoPull>always</autoPull>
-                    <images>
-                        <image>
-                            <name>${docker.image}</name>
-                            <build>
-                                <from>${docker.from}</from>
-                                <cleanup>${docker.cleanup}</cleanup>
-                                <assembly>
-                                    <basedir>/deployments</basedir>
-                                    <descriptorRef>artifact</descriptorRef>
-                                </assembly>
-                                <env>
-                                    <JAVA_APP_JAR>${project.build.finalName}.jar</JAVA_APP_JAR>
-                                </env>
-                            </build>
-                        </image>
-                    </images>
-                </configuration>
             </plugin>
         </plugins>
     </build>

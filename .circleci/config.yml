@@ -1,167 +1,48 @@
-version: 2.1
+version: 2
+aliases:
+  - &GCP-auth
+    name: GCP Authenticate
+    command: |
+      echo 'export GCLOUD_SERVICE_KEY="$GCLOUD_SERVICE_KEY"' >> $BASH_ENV
+      /tools/gcp_authenticate.sh
+  - &docker-login
+    name: Docker login
+    command: |
+      docker login -u _json_key --password-stdin https://eu.gcr.io <<< "${DOCKER_PASSWORD}"
+  - &tag-git-version
+    name: Tag git commit with build version and push to github
+    command: |
+      git config --global user.email "circleci@entur.no"
+      git config --global user.name "circleci"
+      git tag $VERSION
+      git push origin $VERSION
+  - &create-image-version
+    name: Create new image version and store to env var and as file in workspace
+    command: |
+      echo "export VERSION=$CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)"  >> $BASH_ENV
+      echo "$CIRCLE_BRANCH-v$CIRCLE_BUILD_NUM-$(echo -n $CIRCLE_SHA1 | tail -c 8)" > version
+  - &read-image-version
+    name: Read new image version from workspace
+    command: |
+      echo "export VERSION=$(cat ./version)" >> $BASH_ENV
+  - &docker-build-and-push
+    name: Docker build and push
+    command: |
+      IMAGE="eu.gcr.io/entur-system-1287/${CIRCLE_PROJECT_REPONAME}"
+      echo "Image: ${IMAGE}"
+      docker build -t $IMAGE .
+      docker tag $IMAGE "${IMAGE}":"${VERSION}"
+      docker push $IMAGE
 
-orbs:
-  helm: entur/helm@0.0.1
-  slack: circleci/slack@2.2.0
-  clair: ovotech/clair-scanner@1.4.25
-
-executors:
-  java-11:
-    docker:
-      - image: circleci/openjdk:11-jdk
-        environment:
-          _JAVA_OPTIONS: -Xmx1024m
-          TERM: dumb
-          TZ: "/usr/share/zoneinfo/Europe/Stockholm"
-  entur-cci-toolbox:
-    docker:
-      - image: entur/cci-toolbox:2.0
-  cci-toolbox-java11:
+jobs:
+  build:
     docker:
       - image: eu.gcr.io/entur-system-1287/circleci-toolbox-image-java11
         auth:
           username: _json_key
           password: $DOCKER_PASSWORD
     environment:
-      DEBIAN_FRONTEND: "noninteractive"
-aliases:
-  - &GCP-auth
-    name: GCP Authentication for Google Cloud Deploy
-    command: |
-      echo $GCLOUD_SERVICE_KEY > ${HOME}/account-auth.json
-      gcloud auth activate-service-account --key-file ${HOME}/account-auth.json
-      gcloud --quiet container clusters get-credentials $CLOUDSDK_CONTAINER_CLUSTER
-
-  - &docker-login
-    name: Login with docker on gcloud
-    command: docker login -u _json_key -p "${DOCKER_PASSWORD}" https://eu.gcr.io
-  - &bump-versions
-    name: Bump version in pom file
-    command: |
-      mvn build-helper:parse-version versions:set -DnewVersion=\${parsedVersion.majorVersion}.\${parsedVersion.minorVersion}.\${parsedVersion.nextIncrementalVersion} versions:commit
-      cd ~/project
-      NEXT_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-      echo "export NEXT_VERSION=$NEXT_VERSION" >> $BASH_ENV
-      echo "Bumping versions from $MVN_VERSION to $NEXT_VERSION"
-      pushd helm/$CIRCLE_PROJECT_REPONAME
-      sed -i "s/appVersion:.*$/appVersion: 'release-$NEXT_VERSION'/g"  ./Chart.yaml
-      sed -i "s/imageTag:.*$/imageTag: release-$NEXT_VERSION/g"  ./values.yaml
-      popd
-
-  - &git-push-next-version-release
-    name: Push to repository
-    command: |
-      echo "Trying to tag release-$MVN_VERSION"
-      git config --global user.email "circleci@entur.org"
-      git config --global user.name "EnturCircleCi"
-      git tag -a release-$MVN_VERSION -m "Tagging current version"
-      git add helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
-      git add helm/$CIRCLE_PROJECT_REPONAME/values.yaml
-      git add pom.xml
-      git commit -m "Helm Update [ci skip]"
-      git push --tags --set-upstream origin $CIRCLE_BRANCH
-
-    ### Application version handling
-  - &get-version-from-pom
-    name: Getting version by maven pom version
-    command: |
-      cd ~/project
-      MVN_VERSION=$(mvn -q -s /tools/m2/settings.xml -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive exec:exec)
-      echo "export MVN_VERSION=$MVN_VERSION" >> $BASH_ENV
-      echo $MVN_VERSION > ./mvn_version
-  - &get-mvn-version-from-file
-    name: Getting release version from mvn_version file
-    command: |
-      echo "export MVN_VERSION=$(cat ./mvn_version)" >> $BASH_ENV
-  - &tag-successful-deployment
-    name:
-    command: |
-      echo "Trying to tag successful deployment with: $NAMESPACE-$MVN_VERSION"
-      tag=release-$MVN_VERSION
-      gitcommit=$(git rev-list -n 1 $tag)
-      git config --global user.email "circleci@entur.org"
-      git config --global user.name "EnturCircleCi"
-      git tag -a $NAMESPACE-$MVN_VERSION $gitcommit -m "Tagging successfull deployment of version $MVN_VERSION to $NAMESPACE"
-      git push origin $NAMESPACE-$MVN_VERSION
-
-  - &team-ror-circleci-slackhook
-      https://hooks.slack.com/services/${SLACK_API_KEY_CIRCLE_CI}
-
-  - &team-ror-releases-slackhook
-      https://hooks.slack.com/services/${SLACK_API_KEY_RELEASES}
-
-  # Use the parameter CONDITIONAL_SLACKHOOK to customize where the message gets sent
-  - &team-ror-conditional-slackhook
-      https://hooks.slack.com/services/${CONDITIONAL_SLACKHOOK}
-
-  - &save-test-results
-    name: Save test results
-    command: |
-      find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/reports/junit/ \;
-
-    when: always
-
-  - &deploy-payload
-      "*Ready to Deploy*: <$CIRCLE_BUILD_URL|$CIRCLE_PROJECT_REPONAME #$CIRCLE_PREVIOUS_BUILD_NUM> to *$NAMESPACE*\n
-        Repository: <https://circleci.com/bb/enturas/workflows/$CIRCLE_PROJECT_REPONAME|$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME>\n
-        Branch: <https://circleci.com/bb/enturas/$CIRCLE_PROJECT_REPONAME/tree/$CIRCLE_BRANCH|$CIRCLE_BRANCH>\n
-        Version: $MVN_VERSION \n
-        User: $CIRCLE_USERNAME"
-
-  - &success-payload
-      ":tada: Job $CIRCLE_STAGE has succeeded!\n
-         Version: $MVN_VERSION \n
-         User: $CIRCLE_USERNAME"
-
-  - &failure-payload
-      ":red_circle: Job $CIRCLE_STAGE has failed!\n
-         Version: $MVN_VERSION \n
-         User: $CIRCLE_USERNAME"
-
-
-  ### QUALITY TESTING
-  - &read-container-vulnerability-scan-report
-    name: Read the container vulnerability report
-    command: |
-      for line in $(find /clair-reports -type f -iname '*.json'); do
-        unapproved=`grep -Pzo '"unapproved":\s\[\s*\K([\s,0-9\"A-Z\-]*)' "$line" | tr -d ' "\n\0'`
-        if [[ $(echo "$unapproved" | wc -c) -gt 1 ]]; then
-          echo Found unapproved vulernabilities in $line.
-          echo "export CONTAINER_VULNERABILITES=$unapproved" >> $BASH_ENV
-        else echo No unapproved vulernabilities in $line.
-        fi
-      done
-    when: on_fail
-
-commands:
-  slack-status:
-    parameters:
-      success_payload:
-        type: string
-        default: *success-payload
-    steps:
-      - attach_workspace:
-          at: .
-      - run: *get-mvn-version-from-file
-      - slack/status:
-          webhook: *team-ror-circleci-slackhook
-          success_message: << parameters.success_payload >>
-          failure_message: *failure-payload
-
-  save-image-name:
-    parameters:
-      image-version:
-        type: string
-        default: release-$MVN_VERSION
-    steps:
-      - run:
-          command: echo "$DOCKER_REGISTRY/$CIRCLE_PROJECT_REPONAME:<< parameters.image-version >>" > ./gcr.image.version
-      - persist_to_workspace:
-          root: .
-          paths: ./gcr.image.version
-jobs:
-  build:
-    executor: cci-toolbox-java11
+      MAVEN_OPTS: -Xmx3G
     steps:
       - checkout
       - restore_cache:
@@ -172,145 +53,55 @@ jobs:
             - ~/.m2
           key: dep-cache-{{ checksum "pom.xml" }}
       # Cannot use -o because of snapshot dependencies.
-      - run: *get-version-from-pom
       - run: mvn install -s /tools/m2/settings.xml
-      - run: *save-test-results
+      - run:
+          name: Save test results
+          command: |
+            mkdir -p ~/junit/
+            find . -type f -regex ".*/target/surefire-reports/.*xml" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/.*dumpstream" -exec cp {} ~/junit/ \;
+            find . -type f -regex ".*/target/surefire-reports/.*log" -exec cp {} ~/junit/ \;
+          when: always
       - store_test_results:
-          path: ~/reports
+          path: ~/junit
       - store_artifacts:
-          path: ~/reports
+          path: ~/junit
+      - run: *create-image-version
+      - run: *tag-git-version
       - persist_to_workspace:
           root: ~/project
           paths:
             - target
-            - pom.xml
+            - Dockerfile
             - .circleci
-            - helm/*/
-            - ./mvn_version
-      - slack-status
-  publish-docker:
-    executor: cci-toolbox-java11
+            - ./version
+  deploy-docker:
+    docker:
+      - image: eu.gcr.io/entur-system-1287/circleci-toolbox-image-java11
+        auth:
+          username: _json_key
+          password: $DOCKER_PASSWORD
+    environment:
+      DEBIAN_FRONTEND: "noninteractive"
     steps:
       - attach_workspace:
           at: ~/project
-      - restore_cache:
-          key: dep-cache-{{ checksum "pom.xml" }}
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: dep-cache-{{ checksum "pom.xml" }}
       - setup_remote_docker:
           docker_layer_caching: true
       - run: *GCP-auth
       - run: *docker-login
-      - run: *get-mvn-version-from-file
-      - run:
-          name: Docker build, save and push
-          command: mvn docker:build docker:push -s /tools/m2/settings.xml
-
-  prepare-next-release:
-    executor: cci-toolbox-java11
-
-    steps:
-      - checkout
-      - restore_cache:
-          key: dep-cache-{{ checksum "pom.xml" }}
-      - attach_workspace:
-          at: ~/project
-      - add_ssh_keys:
-          fingerprints:
-            - $SSH_FINGERPRINT
-      - run: *get-mvn-version-from-file
-      - run: *bump-versions
-      - run: *git-push-next-version-release
-      - slack-status
-
-  deploy:
-    executor: entur-cci-toolbox
-
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: *GCP-auth
-      - helm/install-helm-chart:
-          chart: ./helm/$CIRCLE_PROJECT_REPONAME
-          namespace: $NAMESPACE
-          release-name: $CIRCLE_PROJECT_REPONAME
-      - run:
-          name: Deployed helm chart
-          command: cat ./helm/$CIRCLE_PROJECT_REPONAME/Chart.yaml
-      - run: *get-mvn-version-from-file
-      - run: *tag-successful-deployment
-      - slack-status
-
-  slack-approval:
-    executor: slack/alpine
-    steps:
-      - attach_workspace:
-          at: .
-      - run: *get-mvn-version-from-file
-      - slack/approval:
-          webhook: *team-ror-releases-slackhook
-          message: *deploy-payload
-
-  container_vulnerability_scan:
-    executor: clair/default
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run: *docker-login
-      - clair/scan:
-          image_file: "gcr.image.version"
-      - run: *read-container-vulnerability-scan-report
-      - slack/status:
-          fail_only: "true"
-          failure_message: "Docker image contains new and/or unapproved vulnerabilities: $CONTAINER_VULNERABILITES"
-          webhook: *team-ror-circleci-slackhook
-
+      - run: *read-image-version
+      - run: *docker-build-and-push
 workflows:
-  version: 2.1
-  release:
+  version: 2
+  build_test_deploy:
     jobs:
       - build:
-          name: build-release
-          context: dev
-      - publish-docker:
-          context: dev
+          context: org-carbon
+      - deploy-docker:
+          context: org-carbon
           requires:
-            - build-release
+            - build
           filters:
             branches:
               only: master
-          post-steps:
-            - save-image-name:
-                image-version: release-$MVN_VERSION
-            - slack-status
-      - container_vulnerability_scan:
-          context: dev
-          requires:
-            - publish-docker
-      - prepare-next-release:
-          context: dev
-          requires:
-            - publish-docker
-      - deploy:
-          name: deploy-dev-release
-          context: dev
-          requires:
-            - prepare-next-release
-      - slack-approval:
-          name: staging-deploy-message-release
-          context: stage
-          requires:
-            - deploy-dev-release
-      - approve-staging-release:
-          type: approval
-          requires:
-            - staging-deploy-message-release
-      - deploy:
-          name: deploy-staging-release
-          context: stage
-          requires:
-            - approve-staging-release
