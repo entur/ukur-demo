@@ -3,7 +3,7 @@ data:
   application.properties: |+
     ukur.subscription.url=http://ukur/external/subscription
     push.baseurl=http://ukur-demo/push
-    server.port=8090
+    server.port={{ .Values.service.http.internalPort }}
 kind: ConfigMap
 metadata:
   name: {{ template "ukur-demo.name" . }}-config
