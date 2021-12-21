@@ -4,9 +4,9 @@ kind: Ingress
 metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
+    traffic-type: public
   annotations:
     kubernetes.io/ingress.class: traefik
-    external-dns.alpha.kubernetes.io/target: {{ .Values.ingress.loadBalancerIP }}
   name: realtime-deviations-demo-v1
   namespace: {{ .Release.Namespace }}
 spec:
