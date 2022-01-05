@@ -4,7 +4,7 @@ kind: Ingress
 metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
-    traffic-type: public
+    traffic-type: api
   annotations:
     kubernetes.io/ingress.class: traefik
   name: realtime-deviations-demo-v1
