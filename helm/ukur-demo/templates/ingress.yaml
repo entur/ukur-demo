@@ -18,5 +18,6 @@ spec:
             backend:
               service:
                 name: {{ template "ukur-demo.name" . }}
-                port: {{ .Values.service.http.externalPort }}
+                port:
+                  number: {{ .Values.service.http.externalPort }}
   {{- end }}
