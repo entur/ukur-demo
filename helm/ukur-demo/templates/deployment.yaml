@@ -25,10 +25,9 @@ spec:
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           env:
             - name: JAVA_OPTIONS
-            value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties
-            -Dfile.encoding=UTF-8
+              value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties -Dfile.encoding=UTF-8
             - name: TZ
-            value: Europe/Oslo
+              value: Europe/Oslo
           livenessProbe:
             failureThreshold: 3
             httpGet:
