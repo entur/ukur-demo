@@ -6,27 +6,29 @@ metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
 spec:
-  progressDeadlineSeconds: 600
   replicas: {{ .Values.replicas }}
   selector:
     matchLabels:
       app: {{ template "ukur-demo.name" . }}
-  strategy:
-    type: Recreate
   template:
     metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
       labels:
         {{- include "common.labels" . | indent 8 }}
     spec:
+      serviceAccountName: application
+
       containers:
-        - env:
-            - name: JAVA_OPTIONS
-              value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties
-                -Dfile.encoding=UTF-8
-            - name: TZ
-              value: Europe/Oslo
+        - name: ukur-demo
           image: {{ .Values.image.identifier }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          env:
+            - name: JAVA_OPTIONS
+            value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties
+            -Dfile.encoding=UTF-8
+            - name: TZ
+            value: Europe/Oslo
           livenessProbe:
             failureThreshold: 3
             httpGet:
@@ -37,7 +39,6 @@ spec:
             periodSeconds: 10
             successThreshold: 1
             timeoutSeconds: 20
-          name: ukur-demo
           ports:
             - containerPort: {{ .Values.service.http.internalPort }}
               name: http
@@ -45,6 +46,13 @@ spec:
             - containerPort: 8778
               name: jolokia
               protocol: TCP
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            capabilities:
+              drop: ["ALL"]
+            seccompProfile:
+              type: RuntimeDefault
           readinessProbe:
             failureThreshold: 3
             httpGet:

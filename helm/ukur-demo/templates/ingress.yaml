@@ -8,7 +8,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: traefik
   name: realtime-deviations-demo-v1
-  namespace: {{ .Release.Namespace }}
+  namespace: {{ .Release.Namespace }} 
 spec:
   rules:
     - host: realtime-deviations-demo-v1{{ .Values.ingress.domainName }}
