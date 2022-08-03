@@ -2,3 +2,7 @@ ingress:
   enabled: true
   domainName: .dev.entur.io
 
+configMap:
+  ukurUrl: http://ukur.dev.entur.internal/external/subscription
+  ukurDemoUrl: http://ukur-demo.dev.entur.internal/push
+

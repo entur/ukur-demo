@@ -2,5 +2,9 @@ ingress:
   enabled: true
   domainName: .staging.entur.io
 
+configMap:
+  ukurUrl: http://ukur.tst.entur.internal/external/subscription
+  ukurDemoUrl: http://ukur-demo.tst.entur.internal/push
+
 
 

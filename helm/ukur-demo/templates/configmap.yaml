@@ -1,8 +1,8 @@
 apiVersion: v1
 data:
   application.properties: |+
-    ukur.subscription.url=http://ukur/external/subscription
-    push.baseurl=http://ukur-demo/push
+    ukur.subscription.url={{ .Values.configMap.ukurUrl }}
+    push.baseurl={{ .Values.configMap.ukurDemoUrl }}
     server.port={{ .Values.service.http.internalPort }}
 kind: ConfigMap
 metadata:
