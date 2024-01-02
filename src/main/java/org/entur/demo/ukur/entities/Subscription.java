@@ -33,12 +33,13 @@ import uk.org.siri.siri20.SubscriptionContextStructure;
 import uk.org.siri.siri20.SubscriptionQualifierStructure;
 import uk.org.siri.siri20.SubscriptionRequest;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeFactory;
 import java.io.Serializable;
 import java.io.StringWriter;
+import java.time.Duration;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
@@ -287,9 +288,8 @@ public class Subscription implements Serializable, Comparable {
                 request.setAddress(pushAddress);
 
                 if (heartbeatInterval != null) {
-                    DatatypeFactory datatypeFactory = DatatypeFactory.newInstance();
                     SubscriptionContextStructure ctx = new SubscriptionContextStructure();
-                    ctx.setHeartbeatInterval(datatypeFactory.newDuration(heartbeatInterval));
+                    ctx.setHeartbeatInterval(Duration.parse(heartbeatInterval));
                     request.setSubscriptionContext(ctx);
                 }
 
