@@ -30,14 +30,14 @@ import java.util.*;
 @Service
 public class SubscriptionService {
 
-    private Logger logger = LoggerFactory.getLogger(this.getClass());
+    private final Logger logger = LoggerFactory.getLogger(this.getClass());
 
-    private String ukurURL;
+    private final String ukurURL;
     private String pushURL;
     private long idCounter = 0;
     private final String basePushId;//need some uniqueness so we don't reuse push addresses at restart
 
-    private HashMap<String, Subscription> subscriptions = new HashMap<>();
+    private final HashMap<String, Subscription> subscriptions = new HashMap<>();
 
     public SubscriptionService(@Value("${ukur.subscription.url}") String ukurURL,
                                @Value("${push.baseurl}") String pushURL) {
@@ -190,6 +190,14 @@ public class SubscriptionService {
         askerOslo3.setUseSiriSubscriptionModel(true);
         add(askerOslo3);
 
+        Subscription askerOslo4 = new Subscription();
+        askerOslo4.setName("Asker-OsloS #1 with 5 minutes minimum arrival delay limit");
+        askerOslo4.addFromStopPoint("NSR:StopPlace:418");
+        askerOslo4.addToStopPoint("NSR:StopPlace:337");
+        askerOslo4.setMinimumDelay("PT5M");
+        askerOslo4.setDeviationType(DeviationType.DELAYED);
+        add(askerOslo4);
+
         Subscription osloTilAsker1 = new Subscription();
         osloTilAsker1.setName("OsloS-Asker #1");
         osloTilAsker1.addFromStopPoint("NSR:StopPlace:337");
@@ -240,7 +248,7 @@ public class SubscriptionService {
         Subscription ruterLine1 = new Subscription();
         ruterLine1.setName("Ruter Line 1");
         ruterLine1.addLineRef("RUT:Line:1");
-        askerOslo1.setMinimumDelay("PT30M");
+        askerOslo1.setMinimumDelay("PT5M");
         add(ruterLine1);
 
         Subscription ruterSX = new Subscription();
@@ -248,12 +256,6 @@ public class SubscriptionService {
         ruterSX.setName("All SX from RUT");
         ruterSX.addCodespace("RUT");
         add(ruterSX);
-
-        Subscription ruterQASX = new Subscription();
-        ruterQASX.setType(SubscriptionTypeEnum.SX);
-        ruterQASX.setName("All SX from QA-RUT");
-        ruterQASX.addCodespace("QA-RUT");
-        add(ruterQASX);
 
         Subscription osloAskerAllData = new Subscription();
         osloAskerAllData.setName("[SIRI|AllData] OsloS-Asker #3 (stopplace only)");
