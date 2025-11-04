@@ -25,6 +25,15 @@
 </head>
 <body>
 
+<div style="padding: 10px; background-color: #f5f5f5; border-bottom: 1px solid #ddd;">
+    <a href="/" class="btn btn-default btn-sm">
+        <span class="glyphicon glyphicon-home"></span> Back to Home
+    </a>
+    <span class="pull-right text-muted">
+        <span class="label label-default">Classic UI</span>
+    </span>
+</div>
+
 <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
 
     <h2><a th:href="@{subscriptions}">List of Subscriptions</a></h2>
@@ -167,7 +176,7 @@
         that does not support all attributes from the json format.
     </p>
 
-    <form class="form-horizontal" id="addSubscription" th:action="@{subscriptions#addSubscription}" th:object="${subscription}" method="post">
+    <form class="form-horizontal" id="addSubscription" th:action="@{subscriptions}" th:object="${subscription}" method="post">
         <ul th:if="${#fields.hasErrors('*')}">
             <h2 class="bg-danger">Error</h2>
             <li class="bg-danger" th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>

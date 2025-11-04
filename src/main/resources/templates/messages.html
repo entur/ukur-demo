@@ -25,7 +25,19 @@
 </head>
 <body>
 
-<p><a th:href="@{subscriptions}">&lt; Back to Subscriptions</a></p>
+<div style="padding: 10px; background-color: #f5f5f5; border-bottom: 1px solid #ddd;">
+    <a href="/" class="btn btn-default btn-sm">
+        <span class="glyphicon glyphicon-home"></span> Back to Home
+    </a>
+    <a th:href="@{subscriptions}" class="btn btn-default btn-sm">
+        <span class="glyphicon glyphicon-list"></span> Back to Subscriptions
+    </a>
+    <span class="pull-right text-muted">
+        <span class="label label-default">Classic UI</span>
+    </span>
+</div>
+
+<div style="padding: 20px;">
 <h2>Messages for subscription "<span th:text="${subscription.name}">name</span>"
     <small><br/> id: <span th:text="${subscription.id}">id</span></small>
     <small><br/> type: <span th:text="${subscription.type}">type</span></small>
@@ -69,5 +81,6 @@
     <p>There are no received push messages yet.</p>
 </div>
 
+</div>
 </body>
 </html>

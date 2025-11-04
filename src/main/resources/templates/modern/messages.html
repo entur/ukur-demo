@@ -1,0 +1,450 @@
+<!DOCTYPE HTML>
+<!--
+  ~ Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence");
+  ~ You may not use this work except in compliance with the Licence.
+  ~ You may obtain a copy of the Licence at:
+  ~
+  ~  https://joinup.ec.europa.eu/software/page/eupl
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the Licence is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Ukur Demo - Messages</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Code Prettify -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/google/code-prettify@master/styles/desert.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <!-- htmx for auto-refresh -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        :root {
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #1a1d23;
+            --bg-card: #2d3139;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            padding-bottom: 2rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container-main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .header-section {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+        .message-card {
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+        .message-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .card-body {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary) !important;
+        }
+        [data-theme="dark"] .breadcrumb {
+            --bs-breadcrumb-bg: var(--bg-card);
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .filter-section {
+            background: var(--bg-card);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .message-timestamp {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+        .auto-refresh-indicator {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        pre {
+            max-height: 500px;
+            overflow: auto;
+        }
+        .badge-type-et {
+            background-color: #0d6efd;
+        }
+        .badge-type-sx {
+            background-color: #198754;
+        }
+        @media (max-width: 768px) {
+            .header-section {
+                padding: 1rem;
+            }
+            .message-card {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-main">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+        <button class="btn btn-outline-secondary" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">
+            <i class="bi bi-moon-stars" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <!-- Header Section -->
+    <div class="header-section">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-3">
+                <li class="breadcrumb-item"><a href="/" class="text-decoration-none">
+                    <i class="bi bi-house"></i> Home
+                </a></li>
+                <li class="breadcrumb-item"><a th:href="@{/modern/subscriptions}" class="text-decoration-none">
+                    Subscriptions
+                </a></li>
+                <li class="breadcrumb-item active" aria-current="page">Messages</li>
+            </ol>
+        </nav>
+
+        <h1 class="display-6 mb-3">
+            <i class="bi bi-envelope-open"></i> Messages
+        </h1>
+
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title" th:text="${subscription.name}">Subscription Name</h5>
+                <div class="row g-2 mt-2">
+                    <div class="col-md-4">
+                        <small class="text-muted">Subscription ID:</small>
+                        <div><code class="small" th:text="${subscription.id}">abc-123</code></div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">Type:</small>
+                        <div><span class="badge bg-secondary" th:text="${subscription.type}">ET</span></div>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted">SIRI Model:</small>
+                        <div>
+                            <span th:if="${subscription.useSiriSubscriptionModel}" class="badge bg-success">Enabled</span>
+                            <span th:unless="${subscription.useSiriSubscriptionModel}" class="badge bg-secondary">Disabled</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filter Section -->
+    <div class="filter-section" th:unless="${#lists.isEmpty(messages)}">
+        <div class="row g-3 align-items-end">
+            <div class="col-md-6">
+                <label for="messageSearch" class="form-label mb-1"><small>Search messages</small></label>
+                <input type="text" class="form-control form-control-sm" id="messageSearch"
+                       placeholder="Search in message content..." onkeyup="filterMessages()">
+            </div>
+            <div class="col-md-3">
+                <label for="typeFilter" class="form-label mb-1"><small>Filter by type</small></label>
+                <select class="form-select form-select-sm" id="typeFilter" onchange="filterMessages()">
+                    <option value="all">All Types</option>
+                    <option value="ET">ET (Estimated Timetable)</option>
+                    <option value="SX">SX (Situation Exchange)</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-sm btn-outline-secondary w-100" onclick="clearFilters()">
+                    <i class="bi bi-x-circle"></i> Clear Filters
+                </button>
+            </div>
+        </div>
+        <div class="mt-2">
+            <small class="text-muted">
+                Showing <span id="visibleCount" th:text="${#lists.size(messages)}">0</span> of
+                <span id="totalCount" th:text="${#lists.size(messages)}">0</span> messages
+            </small>
+        </div>
+    </div>
+
+    <!-- Messages List -->
+    <div id="messagesList" hx-get="" hx-trigger="every 10s" hx-swap="none">
+        <div th:unless="${#lists.isEmpty(messages)}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="mb-0">
+                        Received Messages (<span th:text="${#lists.size(messages)}">0</span>)
+                    </h4>
+                    <small class="text-muted">Sorted by most recent first</small>
+                </div>
+                <div>
+                    <button class="btn btn-outline-secondary btn-sm" onclick="toggleAutoRefresh()">
+                        <i class="bi bi-arrow-clockwise" id="autoRefreshIcon"></i>
+                        <span id="autoRefreshText">Auto-refresh: ON</span>
+                    </button>
+                    <a th:href="@{/modern/messages(delete=true, id=${subscription.id})}" class="btn btn-danger btn-sm"
+                       onclick="return confirm('Are you sure you want to clear all messages?');">
+                        <i class="bi bi-trash"></i> Clear All
+                    </a>
+                </div>
+            </div>
+
+            <div th:if="${#lists.size(messages) == MAX}" class="alert alert-info" role="alert">
+                <i class="bi bi-info-circle"></i>
+                <strong>Note:</strong> Only <span th:text="${MAX}">100</span> messages are stored. Oldest messages are removed when new ones arrive.
+            </div>
+
+            <!-- Message Cards -->
+            <div th:each="m,rowStat : ${messages}" class="message-card">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span th:class="${m.getType() == 'ET' ? 'badge badge-type-et' : 'badge badge-type-sx'}"
+                              th:text="${m.getType()}">ET</span>
+                        <span class="message-timestamp ms-2">
+                            <i class="bi bi-clock"></i>
+                            <span th:text="${#temporals.format(m.getReceived(), 'd/M/yyyy HH:mm:ss')}">11:22:33</span>
+                        </span>
+                        <span th:if="${m.deliveryDelay}" class="badge bg-warning text-dark ms-2"
+                              th:title="'Delivery delay since Anshar timestamp'"
+                              th:text="'Delay: ' + ${m.deliveryDelay}">Delay: 0:0:1</span>
+                    </div>
+                    <button class="btn btn-sm btn-outline-secondary" type="button"
+                            data-bs-toggle="collapse" th:data-bs-target="|#xmlContent${rowStat.index}|"
+                            th:attr="aria-controls=|xmlContent${rowStat.index}|">
+                        <i class="bi bi-code-slash"></i> Show XML
+                    </button>
+                </div>
+
+                <div class="message-content">
+                    <p class="mb-2" th:text="${m.getHumanReadable()}">Human readable message description</p>
+                </div>
+
+                <div class="collapse mt-3" th:id="|xmlContent${rowStat.index}|">
+                    <div class="card card-body bg-light">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <strong>XML Content:</strong>
+                            <button class="btn btn-sm btn-primary" onclick="copyXmlToClipboard(this)"
+                                    th:data-content="${m.getXmlString()}">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
+                        </div>
+                        <pre class="prettyprint lang-xml mb-0"><span th:text="${m.getXmlString()}">xml content</span></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Empty State -->
+        <div th:if="${#lists.isEmpty(messages)}" class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: #dee2e6;"></i>
+            <h4 class="mt-3 text-muted">No Messages Yet</h4>
+            <p class="text-muted">Push messages will appear here when they are received.</p>
+            <div class="mt-4">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Waiting for messages...</span>
+                </div>
+                <p class="mt-2 text-muted small">Waiting for messages...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-refresh indicator -->
+    <div class="auto-refresh-indicator" id="refreshIndicator" style="display: none;">
+        <div class="alert alert-info mb-0">
+            <i class="bi bi-arrow-clockwise"></i> Refreshing...
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<!-- Custom JavaScript -->
+<script>
+    let autoRefreshEnabled = true;
+    let refreshInterval;
+
+    // Theme Management
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+
+        const icon = document.getElementById('themeIcon');
+        if (icon) {
+            icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+        }
+    }
+
+    // Message Filtering
+    function filterMessages() {
+        const searchTerm = document.getElementById('messageSearch')?.value.toLowerCase() || '';
+        const typeFilter = document.getElementById('typeFilter')?.value || 'all';
+        const cards = document.querySelectorAll('.message-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            const typeElement = card.querySelector('.badge-type-et, .badge-type-sx');
+            const messageType = typeElement ? typeElement.textContent.trim() : '';
+
+            const matchesSearch = searchTerm === '' || text.includes(searchTerm);
+            const matchesType = typeFilter === 'all' || messageType === typeFilter;
+
+            if (matchesSearch && matchesType) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update count
+        const visibleCountEl = document.getElementById('visibleCount');
+        if (visibleCountEl) {
+            visibleCountEl.textContent = visibleCount;
+        }
+    }
+
+    function clearFilters() {
+        const searchInput = document.getElementById('messageSearch');
+        const typeFilter = document.getElementById('typeFilter');
+
+        if (searchInput) searchInput.value = '';
+        if (typeFilter) typeFilter.value = 'all';
+
+        filterMessages();
+    }
+
+    // Auto-refresh functionality
+    function startAutoRefresh() {
+        refreshInterval = setInterval(() => {
+            if (autoRefreshEnabled) {
+                document.getElementById('refreshIndicator').style.display = 'block';
+                setTimeout(() => {
+                    location.reload();
+                }, 500);
+            }
+        }, 10000); // Refresh every 10 seconds
+    }
+
+    function toggleAutoRefresh() {
+        autoRefreshEnabled = !autoRefreshEnabled;
+        const text = document.getElementById('autoRefreshText');
+        const icon = document.getElementById('autoRefreshIcon');
+
+        if (autoRefreshEnabled) {
+            text.textContent = 'Auto-refresh: ON';
+            icon.classList.add('spin-animation');
+            setTimeout(() => icon.classList.remove('spin-animation'), 1000);
+        } else {
+            text.textContent = 'Auto-refresh: OFF';
+        }
+    }
+
+    // Copy XML to clipboard
+    function copyXmlToClipboard(button) {
+        const content = button.getAttribute('data-content');
+        navigator.clipboard.writeText(content).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            }, 2000);
+        }).catch(err => {
+            alert('Failed to copy to clipboard');
+            console.error('Copy failed:', err);
+        });
+    }
+
+    // Start auto-refresh and initialize theme on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        initTheme();
+        startAutoRefresh();
+
+        // Store total count
+        const totalCountEl = document.getElementById('totalCount');
+        if (totalCountEl) {
+            const visibleCountEl = document.getElementById('visibleCount');
+            if (visibleCountEl) {
+                visibleCountEl.textContent = totalCountEl.textContent;
+            }
+        }
+    });
+
+    // Add spin animation
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .spin-animation {
+            animation: spin 1s linear;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,907 @@
+<!DOCTYPE HTML>
+<!--
+  ~ Licensed under the EUPL, Version 1.2 or – as soon they will be approved by
+  ~ the European Commission - subsequent versions of the EUPL (the "Licence");
+  ~ You may not use this work except in compliance with the Licence.
+  ~ You may obtain a copy of the Licence at:
+  ~
+  ~  https://joinup.ec.europa.eu/software/page/eupl
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the Licence is distributed on an "AS IS" basis,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the Licence for the specific language governing permissions and
+  ~ limitations under the Licence.
+  -->
+
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Ukur Demo - Subscriptions</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Bootstrap 5.3 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Code Prettify -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/google/code-prettify@master/styles/desert.css">
+    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <!-- htmx for AJAX interactions -->
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <style>
+        :root {
+            --primary-color: #0066cc;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --bg-body: #f8f9fa;
+            --bg-card: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+            --border-color: #dee2e6;
+        }
+
+        [data-theme="dark"] {
+            --bg-body: #1a1d23;
+            --bg-card: #2d3139;
+            --text-primary: #e9ecef;
+            --text-secondary: #adb5bd;
+            --border-color: #495057;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            padding-bottom: 2rem;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .container-main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem 1rem;
+        }
+        .header-section {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+        .subscription-card {
+            background: var(--bg-card);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+        }
+        .subscription-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .form-section {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: background-color 0.3s ease;
+        }
+        [data-theme="dark"] .card,
+        [data-theme="dark"] .modal-content,
+        [data-theme="dark"] .list-group-item,
+        [data-theme="dark"] .form-control,
+        [data-theme="dark"] .form-select {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        [data-theme="dark"] .text-muted {
+            color: var(--text-secondary) !important;
+        }
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+        .badge-messages {
+            font-size: 0.9rem;
+            padding: 0.4rem 0.8rem;
+        }
+        .list-group-horizontal-custom {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+        .loading-overlay.active {
+            display: flex;
+        }
+        .demo-warning {
+            border-left: 4px solid var(--danger-color);
+        }
+        .refresh-hint {
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .refresh-hint.show {
+            opacity: 1;
+        }
+        @media (max-width: 768px) {
+            .subscription-card {
+                padding: 1rem;
+            }
+            .header-section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-main">
+    <!-- Theme Toggle Button -->
+    <div class="theme-toggle">
+        <button class="btn btn-outline-secondary" id="themeToggle" onclick="toggleTheme()" title="Toggle dark mode">
+            <i class="bi bi-moon-stars" id="themeIcon"></i>
+        </button>
+    </div>
+
+    <!-- Header Section -->
+    <div class="header-section">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h1 class="display-5 mb-0">
+                <i class="bi bi-bell"></i> Ukur Demo - Subscriptions
+            </h1>
+            <a href="/" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Home
+            </a>
+        </div>
+        <p class="lead mb-3">
+            Current active subscriptions from this service to receive push messages on deviations in traffic.
+        </p>
+        <div class="alert alert-warning demo-warning" role="alert">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <strong>Demo Service:</strong> This is not intended for real usage. Data is stored in-memory and will be lost on restart.
+        </div>
+        <p class="text-muted mb-0">
+            <i class="bi bi-info-circle"></i>
+            Add new subscriptions or view push messages for existing ones. Click the XML or JSON buttons to see subscriptions in technical format.
+            See <a href="https://github.com/entur/ukur" target="_blank" class="text-decoration-none">Ukur documentation</a> for details.
+        </p>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="mb-4" th:unless="${#lists.isEmpty(allSubscriptions)}">
+        <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" id="searchInput" placeholder="Search subscriptions by name, stops, lines, or codespace..." onkeyup="filterSubscriptions()">
+        </div>
+    </div>
+
+    <!-- Subscriptions List -->
+    <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h2 class="h4 mb-0">Active Subscriptions (<span id="subscriptionCount" th:text="${#lists.size(allSubscriptions)}">0</span>)</h2>
+            <a th:href="@{/modern/subscriptions}" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-clockwise"></i> Refresh
+            </a>
+        </div>
+
+        <!-- Subscription Cards -->
+        <div id="subscriptionsList">
+            <div th:each="s,rowStat : ${#lists.sort(allSubscriptions)}" class="subscription-card" data-searchable>
+                <div class="row">
+                    <div class="col-lg-8">
+                        <h5 class="card-title mb-3">
+                            <i class="bi bi-broadcast"></i> <span th:text="${s.name}">Subscription Name</span>
+                        </h5>
+
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block mb-1"><strong>From Stops</strong></small>
+                                <div th:if="${!#lists.isEmpty(s.fromStopPoints)}" class="list-group-horizontal-custom">
+                                    <span th:each="row : ${#lists.sort(s.fromStopPoints)}" class="badge bg-primary">
+                                        <span th:text="${row}">NSR:StopPlace:123</span>
+                                    </span>
+                                </div>
+                                <span th:if="${#lists.isEmpty(s.fromStopPoints)}" class="text-muted">None</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-muted d-block mb-1"><strong>To Stops</strong></small>
+                                <div th:if="${!#lists.isEmpty(s.toStopPoints)}" class="list-group-horizontal-custom">
+                                    <span th:each="row : ${#lists.sort(s.toStopPoints)}" class="badge bg-success">
+                                        <span th:text="${row}">NSR:StopPlace:456</span>
+                                    </span>
+                                </div>
+                                <span th:if="${#lists.isEmpty(s.toStopPoints)}" class="text-muted">None</span>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block mb-1"><strong>Line Refs</strong></small>
+                                <div th:if="${!#lists.isEmpty(s.lineRefs)}" class="list-group-horizontal-custom">
+                                    <span th:each="row : ${#lists.sort(s.lineRefs)}" class="badge bg-info">
+                                        <span th:text="${row}">Line 1</span>
+                                    </span>
+                                </div>
+                                <span th:if="${#lists.isEmpty(s.lineRefs)}" class="text-muted">None</span>
+                            </div>
+
+                            <div class="col-md-6">
+                                <small class="text-muted d-block mb-1"><strong>Codespaces</strong></small>
+                                <div th:if="${!#lists.isEmpty(s.codespaces)}" class="list-group-horizontal-custom">
+                                    <span th:each="row : ${#lists.sort(s.codespaces)}" class="badge bg-warning text-dark">
+                                        <span th:text="${row}">RUT</span>
+                                    </span>
+                                </div>
+                                <span th:if="${#lists.isEmpty(s.codespaces)}" class="text-muted">None</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="d-flex flex-column gap-2 h-100 justify-content-between">
+                            <div>
+                                <small class="text-muted d-block">Subscription ID:</small>
+                                <code class="small" th:text="${s.id}">abc-123</code>
+
+                                <div class="mt-2">
+                                    <span class="badge bg-secondary me-1" th:text="${s.type}">ET</span>
+                                    <span th:if="${s.useSiriSubscriptionModel}" class="badge bg-dark">SIRI</span>
+                                </div>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2 mt-3">
+                                <a th:href="@{/modern/messages(id=${s.id})}" class="btn btn-outline-primary btn-sm">
+                                    <i class="bi bi-envelope"></i> Messages
+                                    <span class="badge bg-primary badge-messages" th:text="${s.numberOfMessages}">0</span>
+                                </a>
+
+                                <div class="btn-group" role="group">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" th:data-bs-target="|#xml${rowStat.index}|">
+                                        <i class="bi bi-code-slash"></i> XML
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-toggle="modal" th:data-bs-target="|#json${rowStat.index}|">
+                                        <i class="bi bi-filetype-json"></i> JSON
+                                    </button>
+                                </div>
+
+                                <a th:href="@{/modern/subscriptions(deleteSubscriptionId=${s.id})}"
+                                   class="btn btn-outline-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to delete this subscription?');">
+                                    <i class="bi bi-trash"></i> Delete
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- XML Modal -->
+                <div class="modal fade" th:id="|xml${rowStat.index}|" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">XML Representation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <pre class="prettyprint lang-xml"><span th:text="${s.toXML()}">xml content</span></pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="copyToClipboard(this)" th:data-content="${s.toXML()}">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- JSON Modal -->
+                <div class="modal fade" th:id="|json${rowStat.index}|" tabindex="-1">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">JSON Representation</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <pre class="prettyprint lang-json"><span th:text="${s.toJSON()}">json content</span></pre>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" onclick="copyToClipboard(this)" th:data-content="${s.toJSON()}">
+                                    <i class="bi bi-clipboard"></i> Copy
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Subscription Section -->
+    <div class="form-section mt-4">
+        <h2 class="h4 mb-4">
+            <i class="bi bi-plus-circle"></i> Add New Subscription
+        </h2>
+
+        <div class="alert alert-info" role="alert">
+            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> How it works</h6>
+            <p class="mb-2">
+                Find valid IDs for stop places and quays at <a href="https://stoppested.entur.org/" target="_blank" class="alert-link">stoppested.entur.org</a>.
+                Only stops with national IDs (starting with "NSR:") are handled by Ukur.
+            </p>
+            <hr>
+            <p class="mb-2"><strong>Push Message Rules:</strong></p>
+            <ul class="mb-2 small">
+                <li><strong>ET messages:</strong> Pushed when a subscription's from/to stops are affected in correct order, or when subscribed LineRefs have delays/cancellations.</li>
+                <li><strong>SX messages:</strong> Pushed when subscribed stops or lines are affected by a PtSituationElement.</li>
+            </ul>
+            <p class="mb-0 small">
+                This demo uses JSON format for subscriptions. SIRI XML format is also supported but doesn't include all JSON attributes.
+            </p>
+        </div>
+
+        <form id="addSubscription" th:action="@{/modern/subscriptions}" th:object="${subscription}" method="post">
+            <!-- Error Messages -->
+            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Validation Errors</h6>
+                <ul class="mb-0">
+                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>
+                </ul>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+
+            <fieldset>
+                <!-- Name Field -->
+                <div class="mb-4">
+                    <label for="name" class="form-label">
+                        <strong>Subscription Name</strong> <span class="text-danger">*</span>
+                    </label>
+                    <input type="text" class="form-control" id="name" th:field="*{name}"
+                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                           placeholder="Enter a descriptive name" required>
+                    <div class="form-text">Required for JSON subscriptions (not supported in XML format)</div>
+                    <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback">
+                        <span th:errors="*{name}">Name error</span>
+                    </div>
+                </div>
+
+                <!-- From Stops -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>From Stops</strong></label>
+                    <div id="fromStopsList" class="list-group mb-2">
+                        <div th:each="row,rowStat : *{fromStopPoints}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <input type="hidden" th:field="*{fromStopPoints[__${rowStat.index}__]}"/>
+                            <code th:text="*{fromStopPoints[__${rowStat.index}__]}">NSR:StopPlace:123</code>
+                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeFromStop(${rowStat.index})|">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="from_value" class="form-control" placeholder="e.g., NSR:StopPlace:418">
+                        <button type="button" class="btn btn-primary" onclick="addFromStop()">
+                            <i class="bi bi-plus-lg"></i> Add Stop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- To Stops -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>To Stops</strong></label>
+                    <div id="toStopsList" class="list-group mb-2">
+                        <div th:each="row,rowStat : *{toStopPoints}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <input type="hidden" th:field="*{toStopPoints[__${rowStat.index}__]}"/>
+                            <code th:text="*{toStopPoints[__${rowStat.index}__]}">NSR:StopPlace:456</code>
+                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeToStop(${rowStat.index})|">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="to_value" class="form-control" placeholder="e.g., NSR:StopPlace:337">
+                        <button type="button" class="btn btn-primary" onclick="addToStop()">
+                            <i class="bi bi-plus-lg"></i> Add Stop
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Line Refs -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>Line Refs</strong></label>
+                    <div id="lineRefsList" class="list-group mb-2">
+                        <div th:each="row,rowStat : *{lineRefs}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <input type="hidden" th:field="*{lineRefs[__${rowStat.index}__]}"/>
+                            <code th:text="*{lineRefs[__${rowStat.index}__]}">RUT:Line:1</code>
+                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeLineRef(${rowStat.index})|">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="lineref_value" class="form-control" placeholder="e.g., RUT:Line:1">
+                        <button type="button" class="btn btn-primary" onclick="addLineRef()">
+                            <i class="bi bi-plus-lg"></i> Add Line
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Codespaces -->
+                <div class="mb-4">
+                    <label class="form-label"><strong>Codespaces</strong></label>
+                    <div id="codespacesList" class="list-group mb-2">
+                        <div th:each="row,rowStat : *{codespaces}" class="list-group-item d-flex justify-content-between align-items-center">
+                            <input type="hidden" th:field="*{codespaces[__${rowStat.index}__]}"/>
+                            <code th:text="*{codespaces[__${rowStat.index}__]}">RUT</code>
+                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeCodespace(${rowStat.index})|">
+                                <i class="bi bi-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="codespace_value" class="form-control" placeholder="e.g., RUT">
+                        <button type="button" class="btn btn-primary" onclick="addCodespace()">
+                            <i class="bi bi-plus-lg"></i> Add Codespace
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Type -->
+                <div class="mb-4">
+                    <label for="type" class="form-label"><strong>Type</strong></label>
+                    <select class="form-select" id="type" th:field="*{type}">
+                        <option value="ALL">ALL (Both ET and SX)</option>
+                        <option value="ET">ET (Estimated Timetable)</option>
+                        <option value="SX">SX (Situation Exchange)</option>
+                    </select>
+                    <div class="form-text">Select which message types to subscribe to</div>
+                </div>
+
+                <!-- Deviation Type -->
+                <div class="mb-4">
+                    <label for="deviationType" class="form-label"><strong>Deviation Type</strong></label>
+                    <select class="form-select" id="deviationType" th:field="*{deviationType}">
+                        <option value="ALL">ALL</option>
+                        <option value="DELAYED">DELAYED</option>
+                        <option value="TRACK_CHANGE">TRACK_CHANGE</option>
+                        <option value="CANCELED">CANCELED</option>
+                    </select>
+                    <div class="form-text">Filter by specific deviation types</div>
+                </div>
+
+                <!-- SIRI Subscription Model -->
+                <div class="mb-4">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" id="useSiriSubscriptionModel" th:field="*{useSiriSubscriptionModel}">
+                        <label class="form-check-label" for="useSiriSubscriptionModel">
+                            <strong>Use SIRI Subscription Model</strong>
+                        </label>
+                    </div>
+                    <div class="form-text">
+                        When enabled, push messages are wrapped in a SIRI element according to specification.
+                        Otherwise, elements are sent as root elements.
+                    </div>
+                </div>
+
+                <!-- Advanced Options -->
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <strong>Advanced Options</strong>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="heartbeatInterval" class="form-label">Heartbeat Interval</label>
+                            <input type="text" class="form-control" id="heartbeatInterval"
+                                   th:field="*{heartbeatInterval}"
+                                   th:classappend="${#fields.hasErrors('heartbeatInterval')} ? 'is-invalid' : ''"
+                                   placeholder="e.g., PT10M">
+                            <div class="form-text">
+                                Must follow <a href="https://www.w3schools.com/xml/schema_dtypes_date.asp" target="_blank">W3C XML Schema Duration format</a>.
+                                Example: PT10M = every 10 minutes
+                            </div>
+                            <div th:if="${#fields.hasErrors('heartbeatInterval')}" class="invalid-feedback">
+                                <span th:errors="*{heartbeatInterval}">Heartbeat interval error</span>
+                            </div>
+                        </div>
+
+                        <div class="mb-0">
+                            <label for="minimumDelay" class="form-label">Minimum Delay Duration</label>
+                            <input type="text" class="form-control" id="minimumDelay"
+                                   th:field="*{minimumDelay}"
+                                   th:classappend="${#fields.hasErrors('minimumDelay')} ? 'is-invalid' : ''"
+                                   placeholder="e.g., PT30M">
+                            <div class="form-text">
+                                Must follow <a href="https://www.w3schools.com/xml/schema_dtypes_date.asp" target="_blank">W3C XML Schema Duration format</a>.
+                                Example: PT30M = only notify if delay exceeds 30 minutes
+                            </div>
+                            <div th:if="${#fields.hasErrors('minimumDelay')}" class="invalid-feedback">
+                                <span th:errors="*{minimumDelay}">Minimum delay error</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="d-grid gap-2">
+                    <button type="submit" name="save" class="btn btn-success btn-lg">
+                        <i class="bi bi-check-circle"></i> Add Subscription
+                    </button>
+                </div>
+            </fieldset>
+        </form>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-center mt-4 text-muted">
+        <small>
+            <i class="bi bi-info-circle"></i>
+            <span th:utext="${buildVersion}">Build info</span>
+        </small>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner-border text-light" style="width: 4rem; height: 4rem;" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap 5 JS Bundle -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+
+<!-- Custom JavaScript -->
+<script>
+    // Theme Management
+    function initTheme() {
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+    }
+
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        setTheme(newTheme);
+        showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} mode activated`, 'info');
+    }
+
+    function setTheme(theme) {
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+
+        const icon = document.getElementById('themeIcon');
+        if (icon) {
+            icon.className = theme === 'dark' ? 'bi bi-sun' : 'bi bi-moon-stars';
+        }
+    }
+
+    // Toast Notification System
+    function showToast(message, type = 'success') {
+        // Create toast container if it doesn't exist
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toastContainer';
+            toastContainer.className = 'toast-container position-fixed bottom-0 end-0 p-3';
+            toastContainer.style.zIndex = '9999';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Create toast element
+        const toastId = 'toast-' + Date.now();
+        const bgClass = type === 'success' ? 'bg-success' :
+                       type === 'error' ? 'bg-danger' :
+                       type === 'warning' ? 'bg-warning' : 'bg-info';
+
+        const toastHtml = `
+            <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="bi bi-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'}"></i>
+                        ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        `;
+
+        toastContainer.insertAdjacentHTML('beforeend', toastHtml);
+
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+        toast.show();
+
+        // Remove toast element after it's hidden
+        toastElement.addEventListener('hidden.bs.toast', function() {
+            toastElement.remove();
+        });
+    }
+
+    // Search/Filter functionality
+    function filterSubscriptions() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const cards = document.querySelectorAll('.subscription-card');
+        let visibleCount = 0;
+
+        cards.forEach(card => {
+            const text = card.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+
+        // Update count if element exists
+        const countElement = document.getElementById('subscriptionCount');
+        if (countElement && searchTerm) {
+            countElement.textContent = visibleCount;
+        }
+    }
+
+    // Show loading overlay on form submission
+    document.getElementById('addSubscription')?.addEventListener('submit', function() {
+        document.getElementById('loadingOverlay').classList.add('active');
+    });
+
+    // Form list management functions
+    let fromStopCounter = 0;
+    let toStopCounter = 0;
+    let lineRefCounter = 0;
+    let codespaceCounter = 0;
+
+    // Initialize counters from existing items
+    document.addEventListener('DOMContentLoaded', function() {
+        fromStopCounter = document.querySelectorAll('#fromStopsList input[type="hidden"]').length;
+        toStopCounter = document.querySelectorAll('#toStopsList input[type="hidden"]').length;
+        lineRefCounter = document.querySelectorAll('#lineRefsList input[type="hidden"]').length;
+        codespaceCounter = document.querySelectorAll('#codespacesList input[type="hidden"]').length;
+    });
+
+    function addFromStop() {
+        const input = document.getElementById('from_value');
+        const value = input.value.trim();
+
+        if (!value) {
+            showToast('Please enter a stop ID', 'warning');
+            return;
+        }
+
+        const list = document.getElementById('fromStopsList');
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <input type="hidden" name="fromStopPoints[${fromStopCounter}]" value="${escapeHtml(value)}"/>
+            <code>${escapeHtml(value)}</code>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        `;
+        list.appendChild(item);
+        fromStopCounter++;
+        input.value = '';
+        showToast('From stop added!', 'success');
+    }
+
+    function removeFromStop(index) {
+        // This is called from server-rendered items
+        const items = document.querySelectorAll('#fromStopsList .list-group-item');
+        if (items[index]) {
+            items[index].remove();
+            showToast('From stop removed!', 'info');
+        }
+    }
+
+    function addToStop() {
+        const input = document.getElementById('to_value');
+        const value = input.value.trim();
+
+        if (!value) {
+            showToast('Please enter a stop ID', 'warning');
+            return;
+        }
+
+        const list = document.getElementById('toStopsList');
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <input type="hidden" name="toStopPoints[${toStopCounter}]" value="${escapeHtml(value)}"/>
+            <code>${escapeHtml(value)}</code>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        `;
+        list.appendChild(item);
+        toStopCounter++;
+        input.value = '';
+        showToast('To stop added!', 'success');
+    }
+
+    function removeToStop(index) {
+        const items = document.querySelectorAll('#toStopsList .list-group-item');
+        if (items[index]) {
+            items[index].remove();
+            showToast('To stop removed!', 'info');
+        }
+    }
+
+    function addLineRef() {
+        const input = document.getElementById('lineref_value');
+        const value = input.value.trim();
+
+        if (!value) {
+            showToast('Please enter a line reference', 'warning');
+            return;
+        }
+
+        const list = document.getElementById('lineRefsList');
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <input type="hidden" name="lineRefs[${lineRefCounter}]" value="${escapeHtml(value)}"/>
+            <code>${escapeHtml(value)}</code>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        `;
+        list.appendChild(item);
+        lineRefCounter++;
+        input.value = '';
+        showToast('Line reference added!', 'success');
+    }
+
+    function removeLineRef(index) {
+        const items = document.querySelectorAll('#lineRefsList .list-group-item');
+        if (items[index]) {
+            items[index].remove();
+            showToast('Line reference removed!', 'info');
+        }
+    }
+
+    function addCodespace() {
+        const input = document.getElementById('codespace_value');
+        const value = input.value.trim();
+
+        if (!value) {
+            showToast('Please enter a codespace', 'warning');
+            return;
+        }
+
+        const list = document.getElementById('codespacesList');
+        const item = document.createElement('div');
+        item.className = 'list-group-item d-flex justify-content-between align-items-center';
+        item.innerHTML = `
+            <input type="hidden" name="codespaces[${codespaceCounter}]" value="${escapeHtml(value)}"/>
+            <code>${escapeHtml(value)}</code>
+            <button type="button" class="btn btn-danger btn-sm" onclick="this.parentElement.remove()">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        `;
+        list.appendChild(item);
+        codespaceCounter++;
+        input.value = '';
+        showToast('Codespace added!', 'success');
+    }
+
+    function removeCodespace(index) {
+        const items = document.querySelectorAll('#codespacesList .list-group-item');
+        if (items[index]) {
+            items[index].remove();
+            showToast('Codespace removed!', 'info');
+        }
+    }
+
+    // Helper function to escape HTML
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Allow Enter key to trigger add buttons
+    document.getElementById('from_value')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addFromStop();
+        }
+    });
+
+    document.getElementById('to_value')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addToStop();
+        }
+    });
+
+    document.getElementById('lineref_value')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addLineRef();
+        }
+    });
+
+    document.getElementById('codespace_value')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addCodespace();
+        }
+    });
+
+    // Form validation
+    (function() {
+        'use strict';
+        const forms = document.querySelectorAll('form');
+        Array.from(forms).forEach(form => {
+            form.addEventListener('submit', event => {
+                if (!form.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    })();
+
+    // Auto-dismiss alerts and initialize theme
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize theme
+        initTheme();
+
+        // Auto-dismiss alerts after 10 seconds
+        const alerts = document.querySelectorAll('.alert:not(.demo-warning)');
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 10000);
+        });
+
+        // Show success toast if subscription was added (check for lack of errors and presence of subscriptions)
+        const hasErrors = document.querySelector('.alert-danger');
+        const hasSubscriptions = document.querySelector('.subscription-card');
+        if (!hasErrors && hasSubscriptions && window.location.hash === '#addSubscription') {
+            showToast('Subscription added successfully!', 'success');
+        }
+    });
+
+    // Enhanced copy functionality with toast
+    function copyToClipboard(button) {
+        const content = button.getAttribute('data-content');
+        navigator.clipboard.writeText(content).then(() => {
+            const originalHTML = button.innerHTML;
+            button.innerHTML = '<i class="bi bi-check2"></i> Copied!';
+            button.classList.remove('btn-primary');
+            button.classList.add('btn-success');
+
+            showToast('Copied to clipboard!', 'success');
+
+            setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('btn-success');
+                button.classList.add('btn-primary');
+            }, 2000);
+        }).catch(err => {
+            showToast('Failed to copy to clipboard', 'error');
+            console.error('Copy failed:', err);
+        });
+    }
+</script>
+</body>
+</html>
