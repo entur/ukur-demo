@@ -26,8 +26,8 @@
 <body>
 
 <div style="padding: 10px; background-color: #f5f5f5; border-bottom: 1px solid #ddd;">
-    <a th:href="@{/}" class="btn btn-default btn-sm">
-        <span class="glyphicon glyphicon-home"></span> Back to Home
+    <a th:href="@{modern/messages(id=${subscription.id})}" class="btn btn-primary btn-sm">
+        <span class="glyphicon glyphicon-transfer"></span> Switch to Modern
     </a>
     <a th:href="@{subscriptions}" class="btn btn-default btn-sm">
         <span class="glyphicon glyphicon-list"></span> Back to Subscriptions
