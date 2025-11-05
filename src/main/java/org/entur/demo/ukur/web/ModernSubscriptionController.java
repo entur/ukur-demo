@@ -83,7 +83,11 @@ public class ModernSubscriptionController {
                 return "redirect:subscriptions";
             } else {
                 bindingResult.addError(new ObjectError("subscription", "Could not add subscription to Ukur"));
+                model.addAttribute("showAddModal", true);
             }
+        } else {
+            // Reopen modal if there are validation errors
+            model.addAttribute("showAddModal", true);
         }
         return "modern/subscriptions";
     }

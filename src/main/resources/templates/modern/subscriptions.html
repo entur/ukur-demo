@@ -181,6 +181,18 @@
         </p>
     </div>
 
+    <!-- Empty State -->
+    <div th:if="${#lists.isEmpty(allSubscriptions)}" class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: var(--text-secondary);"></i>
+        </div>
+        <h3 class="h5 mb-3">No Subscriptions Yet</h3>
+        <p class="text-muted mb-4">Get started by adding your first subscription to receive real-time deviation messages.</p>
+        <button type="button" class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#addSubscriptionModal">
+            <i class="bi bi-plus-circle"></i> Add Your First Subscription
+        </button>
+    </div>
+
     <!-- Search and Filter Section -->
     <div class="mb-4" th:unless="${#lists.isEmpty(allSubscriptions)}">
         <div class="input-group">
@@ -193,9 +205,14 @@
     <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h4 mb-0">Active Subscriptions (<span id="subscriptionCount" th:text="${#lists.size(allSubscriptions)}">0</span>)</h2>
-            <a th:href="@{subscriptions}" class="btn btn-outline-secondary btn-sm">
-                <i class="bi bi-arrow-clockwise"></i> Refresh
-            </a>
+            <div class="btn-group">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#addSubscriptionModal">
+                    <i class="bi bi-plus-circle"></i> Add Subscription
+                </button>
+                <a th:href="@{subscriptions}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </a>
+            </div>
         </div>
 
         <!-- Subscription Cards -->
@@ -334,218 +351,215 @@
         </div>
     </div>
 
-    <!-- Add New Subscription Section -->
-    <div class="form-section mt-4">
-        <h2 class="h4 mb-4">
-            <i class="bi bi-plus-circle"></i> Add New Subscription
-        </h2>
+    <!-- Add Subscription Modal -->
+    <div class="modal fade" id="addSubscriptionModal" tabindex="-1" aria-labelledby="addSubscriptionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSubscriptionModalLabel">
+                        <i class="bi bi-plus-circle"></i> Add New Subscription
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
 
-        <div class="alert alert-info" role="alert">
-            <h6 class="alert-heading"><i class="bi bi-info-circle"></i> How it works</h6>
-            <p class="mb-2">
-                Find valid IDs for stop places and quays at <a href="https://stoppested.entur.org/" target="_blank" class="alert-link">stoppested.entur.org</a>.
-                Only stops with national IDs (starting with "NSR:") are handled by Ukur.
-            </p>
-            <hr>
-            <p class="mb-2"><strong>Push Message Rules:</strong></p>
-            <ul class="mb-2 small">
-                <li><strong>ET messages:</strong> Pushed when a subscription's from/to stops are affected in correct order, or when subscribed LineRefs have delays/cancellations.</li>
-                <li><strong>SX messages:</strong> Pushed when subscribed stops or lines are affected by a PtSituationElement.</li>
-            </ul>
-            <p class="mb-0 small">
-                This demo uses JSON format for subscriptions. SIRI XML format is also supported but doesn't include all JSON attributes.
-            </p>
-        </div>
+                <form id="addSubscription" th:action="@{subscriptions}" th:object="${subscription}" method="post">
+                    <div class="modal-body">
+                        <!-- Information Alert -->
+                        <div class="alert alert-info py-2 mb-3" role="alert">
+                            <p class="mb-1 small">
+                                <i class="bi bi-info-circle"></i>
+                                Find valid IDs at <a href="https://stoppested.entur.org/" target="_blank" class="alert-link">stoppested.entur.org</a> (use NSR: prefix).
+                                <strong>ET:</strong> Timetable changes. <strong>SX:</strong> Situation messages.
+                            </p>
+                        </div>
 
-        <form id="addSubscription" th:action="@{subscriptions}" th:object="${subscription}" method="post">
-            <!-- Error Messages -->
-            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Validation Errors</h6>
-                <ul class="mb-0">
-                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>
-                </ul>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
+                        <!-- Error Messages -->
+                        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Validation Errors</h6>
+                            <ul class="mb-0">
+                                <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
 
-            <fieldset>
+                        <fieldset>
                 <!-- Name Field -->
-                <div class="mb-4">
-                    <label for="name" class="form-label">
+                <div class="mb-3">
+                    <label for="name" class="form-label small mb-1">
                         <strong>Subscription Name</strong> <span class="text-danger">*</span>
                     </label>
-                    <input type="text" class="form-control" id="name" th:field="*{name}"
+                    <input type="text" class="form-control form-control-sm" id="name" th:field="*{name}"
                            th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
                            placeholder="Enter a descriptive name" required>
-                    <div class="form-text">Required for JSON subscriptions (not supported in XML format)</div>
+                    <div class="form-text small">Required for JSON subscriptions</div>
                     <div th:if="${#fields.hasErrors('name')}" class="invalid-feedback">
                         <span th:errors="*{name}">Name error</span>
                     </div>
                 </div>
 
-                <!-- From Stops -->
-                <div class="mb-4">
-                    <label class="form-label"><strong>From Stops</strong></label>
-                    <div id="fromStopsList" class="list-group mb-2">
-                        <div th:each="row,rowStat : *{fromStopPoints}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <input type="hidden" th:field="*{fromStopPoints[__${rowStat.index}__]}"/>
-                            <code th:text="*{fromStopPoints[__${rowStat.index}__]}">NSR:StopPlace:123</code>
-                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeFromStop(${rowStat.index})|">
-                                <i class="bi bi-trash"></i> Remove
+                <!-- Stops (From/To in two columns) -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>From Stops</strong></label>
+                        <div id="fromStopsList" class="mb-2">
+                            <div th:each="row,rowStat : *{fromStopPoints}" class="d-flex gap-1 mb-1 align-items-center">
+                                <input type="hidden" th:field="*{fromStopPoints[__${rowStat.index}__]}"/>
+                                <code class="flex-grow-1 small" th:text="*{fromStopPoints[__${rowStat.index}__]}">NSR:StopPlace:123</code>
+                                <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeFromStop(${rowStat.index})|">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="from_value" class="form-control" placeholder="NSR:StopPlace:418">
+                            <button type="button" class="btn btn-primary" onclick="addFromStop()">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="from_value" class="form-control" placeholder="e.g., NSR:StopPlace:418">
-                        <button type="button" class="btn btn-primary" onclick="addFromStop()">
-                            <i class="bi bi-plus-lg"></i> Add Stop
-                        </button>
-                    </div>
-                </div>
-
-                <!-- To Stops -->
-                <div class="mb-4">
-                    <label class="form-label"><strong>To Stops</strong></label>
-                    <div id="toStopsList" class="list-group mb-2">
-                        <div th:each="row,rowStat : *{toStopPoints}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <input type="hidden" th:field="*{toStopPoints[__${rowStat.index}__]}"/>
-                            <code th:text="*{toStopPoints[__${rowStat.index}__]}">NSR:StopPlace:456</code>
-                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeToStop(${rowStat.index})|">
-                                <i class="bi bi-trash"></i> Remove
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>To Stops</strong></label>
+                        <div id="toStopsList" class="mb-2">
+                            <div th:each="row,rowStat : *{toStopPoints}" class="d-flex gap-1 mb-1 align-items-center">
+                                <input type="hidden" th:field="*{toStopPoints[__${rowStat.index}__]}"/>
+                                <code class="flex-grow-1 small" th:text="*{toStopPoints[__${rowStat.index}__]}">NSR:StopPlace:456</code>
+                                <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeToStop(${rowStat.index})|">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="to_value" class="form-control" placeholder="NSR:StopPlace:337">
+                            <button type="button" class="btn btn-primary" onclick="addToStop()">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="to_value" class="form-control" placeholder="e.g., NSR:StopPlace:337">
-                        <button type="button" class="btn btn-primary" onclick="addToStop()">
-                            <i class="bi bi-plus-lg"></i> Add Stop
-                        </button>
-                    </div>
                 </div>
 
-                <!-- Line Refs -->
-                <div class="mb-4">
-                    <label class="form-label"><strong>Line Refs</strong></label>
-                    <div id="lineRefsList" class="list-group mb-2">
-                        <div th:each="row,rowStat : *{lineRefs}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <input type="hidden" th:field="*{lineRefs[__${rowStat.index}__]}"/>
-                            <code th:text="*{lineRefs[__${rowStat.index}__]}">RUT:Line:1</code>
-                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeLineRef(${rowStat.index})|">
-                                <i class="bi bi-trash"></i> Remove
+                <!-- LineRefs and Codespaces (in two columns) -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Line Refs</strong></label>
+                        <div id="lineRefsList" class="mb-2">
+                            <div th:each="row,rowStat : *{lineRefs}" class="d-flex gap-1 mb-1 align-items-center">
+                                <input type="hidden" th:field="*{lineRefs[__${rowStat.index}__]}"/>
+                                <code class="flex-grow-1 small" th:text="*{lineRefs[__${rowStat.index}__]}">RUT:Line:1</code>
+                                <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeLineRef(${rowStat.index})|">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="lineref_value" class="form-control" placeholder="RUT:Line:1">
+                            <button type="button" class="btn btn-primary" onclick="addLineRef()">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="lineref_value" class="form-control" placeholder="e.g., RUT:Line:1">
-                        <button type="button" class="btn btn-primary" onclick="addLineRef()">
-                            <i class="bi bi-plus-lg"></i> Add Line
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Codespaces -->
-                <div class="mb-4">
-                    <label class="form-label"><strong>Codespaces</strong></label>
-                    <div id="codespacesList" class="list-group mb-2">
-                        <div th:each="row,rowStat : *{codespaces}" class="list-group-item d-flex justify-content-between align-items-center">
-                            <input type="hidden" th:field="*{codespaces[__${rowStat.index}__]}"/>
-                            <code th:text="*{codespaces[__${rowStat.index}__]}">RUT</code>
-                            <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeCodespace(${rowStat.index})|">
-                                <i class="bi bi-trash"></i> Remove
+                    <div class="col-md-6">
+                        <label class="form-label"><strong>Codespaces</strong></label>
+                        <div id="codespacesList" class="mb-2">
+                            <div th:each="row,rowStat : *{codespaces}" class="d-flex gap-1 mb-1 align-items-center">
+                                <input type="hidden" th:field="*{codespaces[__${rowStat.index}__]}"/>
+                                <code class="flex-grow-1 small" th:text="*{codespaces[__${rowStat.index}__]}">RUT</code>
+                                <button type="button" class="btn btn-danger btn-sm" th:onclick="|removeCodespace(${rowStat.index})|">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="codespace_value" class="form-control" placeholder="RUT">
+                            <button type="button" class="btn btn-primary" onclick="addCodespace()">
+                                <i class="bi bi-plus-lg"></i>
                             </button>
                         </div>
                     </div>
-                    <div class="input-group">
-                        <input type="text" id="codespace_value" class="form-control" placeholder="e.g., RUT">
-                        <button type="button" class="btn btn-primary" onclick="addCodespace()">
-                            <i class="bi bi-plus-lg"></i> Add Codespace
-                        </button>
+                </div>
+
+                <!-- Type and Deviation Type (in two columns) -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="type" class="form-label"><strong>Type</strong></label>
+                        <select class="form-select form-select-sm" id="type" th:field="*{type}">
+                            <option value="ALL">ALL</option>
+                            <option value="ET">ET</option>
+                            <option value="SX">SX</option>
+                        </select>
+                        <div class="form-text small">Message type</div>
                     </div>
-                </div>
-
-                <!-- Type -->
-                <div class="mb-4">
-                    <label for="type" class="form-label"><strong>Type</strong></label>
-                    <select class="form-select" id="type" th:field="*{type}">
-                        <option value="ALL">ALL (Both ET and SX)</option>
-                        <option value="ET">ET (Estimated Timetable)</option>
-                        <option value="SX">SX (Situation Exchange)</option>
-                    </select>
-                    <div class="form-text">Select which message types to subscribe to</div>
-                </div>
-
-                <!-- Deviation Type -->
-                <div class="mb-4">
-                    <label for="deviationType" class="form-label"><strong>Deviation Type</strong></label>
-                    <select class="form-select" id="deviationType" th:field="*{deviationType}">
-                        <option value="ALL">ALL</option>
-                        <option value="DELAYED">DELAYED</option>
-                        <option value="TRACK_CHANGE">TRACK_CHANGE</option>
-                        <option value="CANCELED">CANCELED</option>
-                    </select>
-                    <div class="form-text">Filter by specific deviation types</div>
+                    <div class="col-md-6">
+                        <label for="deviationType" class="form-label"><strong>Deviation Type</strong></label>
+                        <select class="form-select form-select-sm" id="deviationType" th:field="*{deviationType}">
+                            <option value="ALL">ALL</option>
+                            <option value="DELAYED">DELAYED</option>
+                            <option value="TRACK_CHANGE">TRACK_CHANGE</option>
+                            <option value="CANCELED">CANCELED</option>
+                        </select>
+                        <div class="form-text small">Deviation filter</div>
+                    </div>
                 </div>
 
                 <!-- SIRI Subscription Model -->
-                <div class="mb-4">
+                <div class="mb-3">
                     <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="useSiriSubscriptionModel" th:field="*{useSiriSubscriptionModel}">
-                        <label class="form-check-label" for="useSiriSubscriptionModel">
+                        <label class="form-check-label small" for="useSiriSubscriptionModel">
                             <strong>Use SIRI Subscription Model</strong>
                         </label>
                     </div>
-                    <div class="form-text">
-                        When enabled, push messages are wrapped in a SIRI element according to specification.
-                        Otherwise, elements are sent as root elements.
+                    <div class="form-text small">
+                        Wrap push messages in SIRI element per specification
                     </div>
                 </div>
 
                 <!-- Advanced Options -->
-                <div class="card mb-4">
-                    <div class="card-header">
-                        <strong>Advanced Options</strong>
+                <div class="card mb-3">
+                    <div class="card-header py-2">
+                        <small><strong>Advanced Options</strong></small>
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label for="heartbeatInterval" class="form-label">Heartbeat Interval</label>
-                            <input type="text" class="form-control" id="heartbeatInterval"
-                                   th:field="*{heartbeatInterval}"
-                                   th:classappend="${#fields.hasErrors('heartbeatInterval')} ? 'is-invalid' : ''"
-                                   placeholder="e.g., PT10M">
-                            <div class="form-text">
-                                Must follow <a href="https://www.w3schools.com/xml/schema_dtypes_date.asp" target="_blank">W3C XML Schema Duration format</a>.
-                                Example: PT10M = every 10 minutes
+                    <div class="card-body py-2">
+                        <div class="row">
+                            <div class="col-md-6 mb-2">
+                                <label for="heartbeatInterval" class="form-label small mb-1">Heartbeat Interval</label>
+                                <input type="text" class="form-control form-control-sm" id="heartbeatInterval"
+                                       th:field="*{heartbeatInterval}"
+                                       th:classappend="${#fields.hasErrors('heartbeatInterval')} ? 'is-invalid' : ''"
+                                       placeholder="PT10M">
+                                <div class="form-text small">W3C Duration format (e.g., PT10M)</div>
+                                <div th:if="${#fields.hasErrors('heartbeatInterval')}" class="invalid-feedback">
+                                    <span th:errors="*{heartbeatInterval}">Error</span>
+                                </div>
                             </div>
-                            <div th:if="${#fields.hasErrors('heartbeatInterval')}" class="invalid-feedback">
-                                <span th:errors="*{heartbeatInterval}">Heartbeat interval error</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-0">
-                            <label for="minimumDelay" class="form-label">Minimum Delay Duration</label>
-                            <input type="text" class="form-control" id="minimumDelay"
-                                   th:field="*{minimumDelay}"
-                                   th:classappend="${#fields.hasErrors('minimumDelay')} ? 'is-invalid' : ''"
-                                   placeholder="e.g., PT30M">
-                            <div class="form-text">
-                                Must follow <a href="https://www.w3schools.com/xml/schema_dtypes_date.asp" target="_blank">W3C XML Schema Duration format</a>.
-                                Example: PT30M = only notify if delay exceeds 30 minutes
-                            </div>
-                            <div th:if="${#fields.hasErrors('minimumDelay')}" class="invalid-feedback">
-                                <span th:errors="*{minimumDelay}">Minimum delay error</span>
+                            <div class="col-md-6 mb-2">
+                                <label for="minimumDelay" class="form-label small mb-1">Minimum Delay</label>
+                                <input type="text" class="form-control form-control-sm" id="minimumDelay"
+                                       th:field="*{minimumDelay}"
+                                       th:classappend="${#fields.hasErrors('minimumDelay')} ? 'is-invalid' : ''"
+                                       placeholder="PT30M">
+                                <div class="form-text small">W3C Duration format (e.g., PT30M)</div>
+                                <div th:if="${#fields.hasErrors('minimumDelay')}" class="invalid-feedback">
+                                    <span th:errors="*{minimumDelay}">Error</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+                        </fieldset>
+                    </div><!-- /.modal-body -->
 
-                <!-- Submit Button -->
-                <div class="d-grid gap-2">
-                    <button type="submit" name="save" class="btn btn-success btn-lg">
-                        <i class="bi bi-check-circle"></i> Add Subscription
-                    </button>
-                </div>
-            </fieldset>
-        </form>
-    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="bi bi-x-circle"></i> Cancel
+                        </button>
+                        <button type="submit" name="save" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> Add Subscription
+                        </button>
+                    </div>
+                </form>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
 
     <!-- Footer -->
     <div class="text-center mt-4 text-muted">
@@ -902,6 +916,17 @@
             console.error('Copy failed:', err);
         });
     }
+
+    // Auto-open modal if there are validation errors or if showAddModal flag is set
+    document.addEventListener('DOMContentLoaded', function() {
+        const hasErrors = document.querySelector('#addSubscription .alert-danger') !== null;
+        const showAddModal = /*[[${showAddModal}]]*/ false;
+
+        if (hasErrors || showAddModal) {
+            const modal = new bootstrap.Modal(document.getElementById('addSubscriptionModal'));
+            modal.show();
+        }
+    });
 </script>
 </body>
 </html>
