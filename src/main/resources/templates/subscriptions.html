@@ -36,7 +36,7 @@
 
 <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
 
-    <h2><a th:href="@{subscriptions}">List of Subscriptions</a></h2>
+    <h2><a th:href="@{/subscriptions}">List of Subscriptions</a></h2>
 
     <p>
         Current active subscriptions from this service to receive push messages on
@@ -67,7 +67,7 @@
             <td>Subscription id: <span th:text="${s.id}">id</span><br/>
                 type: <span th:text="${s.type}">type</span><br/>
                 push Id: <span th:text="${s.pushId}">pushId</span><br/>
-                <a th:href="@{messages(id=${s.id})}">Messages: <span th:text="${s.numberOfMessages}">0</span></a>
+                <a th:href="@{/messages(id=${s.id})}">Messages: <span th:text="${s.numberOfMessages}">0</span></a>
             </td>
             <td th:text="${s.name}">name</td>
             <td>
@@ -107,7 +107,7 @@
                 </table>
             </td>
             <td>
-                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}" class="btn btn-info">Delete</a>
+                <a th:href="@{/subscriptions(deleteSubscriptionId=${s.id})}" class="btn btn-info">Delete</a>
 
                 <br/><br/>
                 <a th:href="|#xml${rowStat.index}|" class="btn btn-info" data-toggle="modal">&lt;xml/&gt;</a>
@@ -176,7 +176,7 @@
         that does not support all attributes from the json format.
     </p>
 
-    <form class="form-horizontal" id="addSubscription" th:action="@{subscriptions}" th:object="${subscription}" method="post">
+    <form class="form-horizontal" id="addSubscription" th:action="@{/subscriptions}" th:object="${subscription}" method="post">
         <ul th:if="${#fields.hasErrors('*')}">
             <h2 class="bg-danger">Error</h2>
             <li class="bg-danger" th:each="err : ${#fields.errors('*')}" th:text="${err}">Input is incorrect</li>
@@ -348,7 +348,7 @@
             </div>
         </fieldset>
     </form>
-    <a th:href="@{subscriptions}">Refresh page</a>
+    <a th:href="@{/subscriptions}">Refresh page</a>
 </div>
 <div align="center"><h6><span th:utext="${buildVersion}">Description</span></h6></div>
 </body>

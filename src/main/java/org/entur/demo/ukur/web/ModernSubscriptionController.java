@@ -80,7 +80,7 @@ public class ModernSubscriptionController {
         validate(subscription, bindingResult);
         if (!bindingResult.hasErrors()) {
             if (this.subscriptionService.add(subscription)) {
-                return "redirect:/modern/subscriptions";
+                return "redirect:subscriptions";
             } else {
                 bindingResult.addError(new ObjectError("subscription", "Could not add subscription to Ukur"));
             }
@@ -111,6 +111,6 @@ public class ModernSubscriptionController {
     public String removeSubscription(Subscription s, Model model, HttpServletRequest req) {
         String id = req.getParameter("deleteSubscriptionId");
         subscriptionService.remove(id);
-        return "redirect:/modern/subscriptions";
+        return "redirect:subscriptions";
     }
 }

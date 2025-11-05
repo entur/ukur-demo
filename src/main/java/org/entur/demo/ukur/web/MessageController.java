@@ -52,10 +52,10 @@ public class MessageController {
     }
 
     @RequestMapping(value = "messages", params = {"delete", "id"})
-    public String removeMessagesForSubscription(Model model, HttpServletRequest req) {
+    public String removeMessagesForSubscription(HttpServletRequest req) {
         String id = req.getParameter("id");
         messageService.removeMessages(id);
-        return listMessagesForSubscription(model, req);
+        return "redirect:messages?id=" + id;
     }
 
 }
