@@ -193,7 +193,7 @@
     <div class="subscriptionlist" th:unless="${#lists.isEmpty(allSubscriptions)}">
         <div class="d-flex justify-content-between align-items-center mb-3">
             <h2 class="h4 mb-0">Active Subscriptions (<span id="subscriptionCount" th:text="${#lists.size(allSubscriptions)}">0</span>)</h2>
-            <a th:href="@{/modern/subscriptions}" class="btn btn-outline-secondary btn-sm">
+            <a th:href="@{subscriptions}" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
             </a>
         </div>
@@ -265,7 +265,7 @@
                             </div>
 
                             <div class="d-flex flex-column gap-2 mt-3">
-                                <a th:href="@{/modern/messages(id=${s.id})}" class="btn btn-outline-primary btn-sm">
+                                <a th:href="@{messages(id=${s.id})}" class="btn btn-outline-primary btn-sm">
                                     <i class="bi bi-envelope"></i> Messages
                                     <span class="badge bg-primary badge-messages" th:text="${s.numberOfMessages}">0</span>
                                 </a>
@@ -279,7 +279,7 @@
                                     </button>
                                 </div>
 
-                                <a th:href="@{/modern/subscriptions(deleteSubscriptionId=${s.id})}"
+                                <a th:href="@{subscriptions(deleteSubscriptionId=${s.id})}"
                                    class="btn btn-outline-danger btn-sm"
                                    onclick="return confirm('Are you sure you want to delete this subscription?');">
                                     <i class="bi bi-trash"></i> Delete
@@ -357,7 +357,7 @@
             </p>
         </div>
 
-        <form id="addSubscription" th:action="@{/modern/subscriptions}" th:object="${subscription}" method="post">
+        <form id="addSubscription" th:action="@{subscriptions}" th:object="${subscription}" method="post">
             <!-- Error Messages -->
             <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
                 <h6 class="alert-heading"><i class="bi bi-exclamation-triangle-fill"></i> Validation Errors</h6>

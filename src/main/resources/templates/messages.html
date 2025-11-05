@@ -29,7 +29,7 @@
     <a href="/" class="btn btn-default btn-sm">
         <span class="glyphicon glyphicon-home"></span> Back to Home
     </a>
-    <a th:href="@{/subscriptions}" class="btn btn-default btn-sm">
+    <a th:href="@{subscriptions}" class="btn btn-default btn-sm">
         <span class="glyphicon glyphicon-list"></span> Back to Subscriptions
     </a>
     <span class="pull-right text-muted">
@@ -52,7 +52,7 @@
         <p>Note: Only <span th:text="${MAX}"/> messages are stored, after that the oldest messages are removed as new ones arrive.</p>
     </div>
 
-    <a th:href="@{/messages(delete=true, id=${subscription.id})}">Clear all</a>
+    <a th:href="@{messages(delete=true, id=${subscription.id})}">Clear all</a>
     <table class="table table-bordered">
         <thead>
         <tr>
