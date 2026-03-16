@@ -38,10 +38,13 @@ jobs:
     if: github.repository_owner == 'entur' && github.event_name == 'push'
     needs: [docker-build]
     uses: entur/gha-docker/.github/workflows/push.yml@v1
-
+  helm-lint:
+    uses: entur/gha-helm/.github/workflows/lint.yml@v1
+    with:
+      environment: dev
   deploy-dev:
     if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
-    needs: docker-push
+    needs: [helm-lint, docker-push]
     uses: entur/gha-helm/.github/workflows/deploy.yml@v1
     with:
       environment: dev
