@@ -1,4 +1,4 @@
-name: Build and push
+name: Build, Push and Deploy
 on:
   push:
     branches:
@@ -8,23 +8,17 @@ on:
       - master
 jobs:
   maven-verify:
-    env:
-      JFROG_USER: ${{ secrets.ARTIFACTORY_AUTH_USER }}
-      JFROG_PASS: ${{ secrets.ARTIFACTORY_AUTH_TOKEN }}
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
       - uses: actions/checkout@v4
-      - name: Copy maven settings
-        run: |
-          wget https://raw.githubusercontent.com/entur/ror-maven-settings/master/.m2/settings.xml -O .github/workflows/settings.xml
       - uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: temurin
           cache: 'maven'
-      - run: mvn verify -s .github/workflows/settings.xml
+      - run: mvn verify
       - uses: actions/upload-artifact@v4.4.0
         with:
           path: target/*.jar
@@ -35,7 +29,70 @@ jobs:
     with:
       build_artifact_name: artifact
       build_artifact_path: target
+  docker-scan:
+    needs: [ docker-build ]
+    uses: entur/gha-security/.github/workflows/docker-scan.yml@v2
+    with:
+      image_artifact: ${{ needs.docker-build.outputs.image_artifact }}
   docker-push:
     if: github.repository_owner == 'entur' && github.event_name == 'push'
     needs: [docker-build]
     uses: entur/gha-docker/.github/workflows/push.yml@v1
+
+  deploy-dev:
+    if: ${{ github.ref == 'refs/heads/master' && github.event_name != 'pull_request' }}
+    needs: docker-push
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+    with:
+      environment: dev
+      image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+      chart: helm/ukur-demo
+      namespace: ukur-demo
+      release_name: ukur-demo
+    secrets: inherit
+
+  approval-tst:
+      if: ${{ github.ref == 'refs/heads/master' }}
+      needs: deploy-dev
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      environment: Approve
+      steps:
+        - name: Manual approval
+          shell: bash
+          run: echo "Approve TST deployment"
+
+  deploy-tst:
+      if: ${{ github.ref == 'refs/heads/master' }}
+      needs: [ docker-push, approval-tst ]
+      uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+      with:
+        environment: tst
+        image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+        chart: helm/ukur-demo
+        namespace: ukur-demo
+        release_name: ukur-demo
+      secrets: inherit
+
+  approval-prd:
+      if: ${{ github.ref == 'refs/heads/master' }}
+      needs: deploy-tst
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+      environment: Approve
+      steps:
+        - name: Manual approval
+          shell: bash
+          run: echo "Approve PRD deployment"
+
+  deploy-prd:
+      if: ${{ github.ref == 'refs/heads/master' }}
+      needs: [ docker-push, approval-prd ]
+      uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+      with:
+        environment: prd
+        image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+        chart: helm/ukur-demo
+        namespace: ukur-demo
+        release_name: ukur-demo
+      secrets: inherit
