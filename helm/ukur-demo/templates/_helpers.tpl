@@ -39,6 +39,6 @@ app.kubernetes.io/managed-by: Helm
 {{- end }}
 
 {{- define "common.annotations" }}
-meta.helm.sh/release-name: {{ template "ukur-demo.name" . }}
-meta.helm.sh/release-namespace: {{ template "ukur-demo.name" . }}
+meta.helm.sh/release-name: {{ .Release.Name }}
+meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 {{- end }}
