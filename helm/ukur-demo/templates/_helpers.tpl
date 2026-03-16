@@ -34,4 +34,11 @@ team: ror
 slack: talk-ror
 type: realtime-deviations-demo
 namespace: {{ .Release.Namespace }}
+app.kubernetes.io/instance: {{ template "ukur-demo.name" . }}
+app.kubernetes.io/managed-by: Helm
+{{- end }}
+
+{{- define "common.annotations" }}
+meta.helm.sh/release-name: {{ template "ukur-demo.name" . }}
+meta.helm.sh/release-namespace: {{ template "ukur-demo.name" . }}
 {{- end }}
