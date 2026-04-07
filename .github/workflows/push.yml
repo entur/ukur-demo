@@ -49,6 +49,7 @@ jobs:
     with:
       environment: dev
       image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+      image_set_path: "image.identifier"
       chart: helm/ukur-demo
       namespace: ukur-demo
       release_name: ukur-demo
@@ -72,6 +73,7 @@ jobs:
       with:
         environment: tst
         image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+        image_set_path: "image.identifier"
         chart: helm/ukur-demo
         namespace: ukur-demo
         release_name: ukur-demo
@@ -95,6 +97,7 @@ jobs:
       with:
         environment: prd
         image: ${{ needs.docker-push.outputs.image_name }}:${{ needs.docker-push.outputs.image_tag}}
+        image_set_path: "image.identifier"
         chart: helm/ukur-demo
         namespace: ukur-demo
         release_name: ukur-demo
