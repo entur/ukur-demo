@@ -27,7 +27,7 @@ spec:
           image: {{ .Values.image.identifier }}
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           env:
-            - name: JAVA_OPTIONS
+            - name: JDK_JAVA_OPTIONS
               value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties -Dfile.encoding=UTF-8
             - name: TZ
               value: Europe/Oslo
