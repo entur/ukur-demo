@@ -1,0 +1,58 @@
+# .trivyignore - Suppressed CVEs with no available fix
+# These are all in Debian base packages (distroless/java21-debian12) where
+# Debian has either marked as won't-fix or no patch has been released yet.
+# Re-evaluate when Debian releases updated packages.
+
+# libc6 - glibc (disputed/won't-fix by Debian)
+CVE-2019-1010022
+CVE-2019-1010023
+CVE-2019-1010024
+CVE-2019-1010025
+CVE-2018-20796
+CVE-2019-9192
+CVE-2010-2632
+CVE-2010-4756
+CVE-2026-0861
+CVE-2026-0915
+CVE-2026-4046
+CVE-2026-4437
+CVE-2026-4438
+CVE-2025-15281
+
+# libexpat1 - no Debian patch available
+CVE-2024-28757
+CVE-2023-52426
+CVE-2025-59375
+CVE-2025-66382
+CVE-2026-24515
+CVE-2026-25210
+CVE-2026-32776
+CVE-2026-32777
+CVE-2026-32778
+
+# libpng16-16 - no Debian patch available
+CVE-2021-4214
+CVE-2025-28162
+CVE-2025-28164
+CVE-2026-3713
+CVE-2026-33416
+CVE-2026-33636
+CVE-2026-34757
+
+# libuuid1 - no Debian patch available
+CVE-2022-0563
+CVE-2025-14104
+CVE-2026-3184
+CVE-2026-27456
+
+# libgcc-s1 / libstdc++6 / gcc-12-base - Debian won't fix
+CVE-2022-27943
+
+# zlib1g - no Debian patch available
+CVE-2026-27171
+
+# liblcms2-2 - no Debian patch available
+CVE-2025-29070
+
+# commons-lang / commons-lang3 - no fix released yet for any version
+CVE-2025-48924
