@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
+import org.entur.demo.ukur.SiriJaxbContextHolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri20.EstimatedTimetableRequestStructure;
@@ -33,7 +34,6 @@ import uk.org.siri.siri20.SubscriptionContextStructure;
 import uk.org.siri.siri20.SubscriptionQualifierStructure;
 import uk.org.siri.siri20.SubscriptionRequest;
 
-import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import javax.xml.datatype.DatatypeFactory;
@@ -46,7 +46,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class Subscription implements Serializable, Comparable {
+public class Subscription implements Serializable, Comparable<Subscription> {
 
     @JsonIgnore
     private static final Logger logger = LoggerFactory.getLogger(Subscription.class);
@@ -71,22 +71,13 @@ public class Subscription implements Serializable, Comparable {
     private String heartbeatInterval = null;
     private String minimumDelay = null;
     @JsonIgnore
-    private DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
     @JsonIgnore
     private String xmlCache; //Used to cache the xml representation (works since we don't support updates)
     @JsonIgnore
     private String jsonCache; //Used to cache the jsonCache representation (works since we don't support updates)
 
-    private static final JAXBContext jaxbContext;
     private static final ObjectMapper mapper = new ObjectMapper();
-
-    static {
-        try {
-            jaxbContext = JAXBContext.newInstance(Siri.class);
-        } catch (JAXBException e) {
-            throw new RuntimeException(e);
-        }
-    }
 
     public ArrayList<String> getFromStopPoints() {
         return fromStopPoints;
@@ -242,22 +233,8 @@ public class Subscription implements Serializable, Comparable {
     }
 
     @Override
-    public int compareTo(Object o) {
-        Subscription that = (Subscription) o;
+    public int compareTo(Subscription that) {
         return this.pushId.compareTo(that.pushId);
-    }
-
-    public void clear() {
-        id = null;
-        name = null;
-        pushAddress = null;
-        fromStopPoints = new ArrayList<>();
-        toStopPoints = new ArrayList<>();
-        lineRefs = new ArrayList<>();
-        codespaces = new ArrayList<>();
-        type = SubscriptionTypeEnum.ALL;
-        useSiriSubscriptionModel = false;
-        pushAllData = false;
     }
 
     public String toJSON() {
@@ -344,7 +321,7 @@ public class Subscription implements Serializable, Comparable {
                 siri.setSubscriptionRequest(request);
 
 
-                Marshaller marshaller = jaxbContext.createMarshaller();
+                Marshaller marshaller = SiriJaxbContextHolder.INSTANCE.createMarshaller();
                 marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
                 marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
                 StringWriter writer = new StringWriter();

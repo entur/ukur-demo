@@ -18,15 +18,14 @@ package org.entur.demo.ukur.services;
 import com.google.common.collect.EvictingQueue;
 import com.google.common.collect.Queues;
 import org.apache.commons.lang3.StringUtils;
+import org.entur.demo.ukur.SiriJaxbContextHolder;
 import org.entur.demo.ukur.entities.MessageTypeEnum;
 import org.entur.demo.ukur.entities.ReceivedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import uk.org.siri.siri20.*;
 
-import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import java.io.StringWriter;
@@ -35,6 +34,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static uk.org.siri.siri20.CallStatusEnumeration.CANCELLED;
 import static uk.org.siri.siri20.CallStatusEnumeration.DELAYED;
@@ -45,17 +45,10 @@ public class MessageService {
     public static final int MAX_SIZE_PER_SUBSCRIPTION = 100;
     private final Logger logger = LoggerFactory.getLogger(this.getClass());
     private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-    private final JAXBContext jaxbContext;
-    private HashMap<String, Collection<ReceivedMessage>> messageStore = new HashMap<>();
-    private HashMap<String, LocalDateTime> lastMessageReceived = new HashMap<>();
+    private final Map<String, Collection<ReceivedMessage>> messageStore = new ConcurrentHashMap<>();
+    private final Map<String, LocalDateTime> lastMessageReceived = new ConcurrentHashMap<>();
 
-    @Autowired
     public MessageService() {
-        try {
-            jaxbContext = JAXBContext.newInstance(Siri.class);
-        } catch (JAXBException e) {
-            throw new RuntimeException("Could not initialize a JAXBContext", e);
-        }
     }
 
     public LocalDateTime getLastMessageReceived(String subscriptionId) {
@@ -63,7 +56,7 @@ public class MessageService {
     }
 
     public int getMessageCount(String subscriptionId) {
-        return getMessages(subscriptionId).size();
+        return messageStore.getOrDefault(subscriptionId, Collections.emptyList()).size();
     }
 
     public void addPushMessage(String subscriptionId, Object receivedPushMessage) {
@@ -160,7 +153,7 @@ public class MessageService {
 
     private String toString(Object siriElement) {
         try {
-            Marshaller marshaller = jaxbContext.createMarshaller();
+            Marshaller marshaller = SiriJaxbContextHolder.INSTANCE.createMarshaller();
             marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
             marshaller.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
             StringWriter writer = new StringWriter();

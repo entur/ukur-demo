@@ -31,7 +31,6 @@ import static org.entur.demo.ukur.services.MessageService.MAX_SIZE_PER_SUBSCRIPT
 public class MessageController {
 
     private final SubscriptionService subscriptionService;
-
     private final MessageService messageService;
 
     @Autowired
@@ -41,21 +40,34 @@ public class MessageController {
     }
 
     @RequestMapping(value = "messages", params = {"id"})
-    public String listMessagesForSubscription(Model model, HttpServletRequest req) {
-        String id = req.getParameter("id");
-        Subscription subscription = subscriptionService.get(id);
-        model.addAttribute("subscription",subscription);
-        model.addAttribute("messages", messageService.getMessages(id));
-        model.addAttribute("last", messageService.getLastMessageReceived(id));
-        model.addAttribute("MAX", MAX_SIZE_PER_SUBSCRIPTION);
-        return "messages";
+    public String listMessages(Model model, HttpServletRequest req) {
+        return showMessages(model, req, "messages");
     }
 
     @RequestMapping(value = "messages", params = {"delete", "id"})
-    public String removeMessagesForSubscription(HttpServletRequest req) {
-        String id = req.getParameter("id");
-        messageService.removeMessages(id);
-        return "redirect:messages?id=" + id;
+    public String removeMessages(HttpServletRequest req) {
+        messageService.removeMessages(req.getParameter("id"));
+        return "redirect:messages?id=" + req.getParameter("id");
     }
 
+    @RequestMapping(value = "/modern/messages", params = {"id"})
+    public String listModernMessages(Model model, HttpServletRequest req) {
+        return showMessages(model, req, "modern/messages");
+    }
+
+    @RequestMapping(value = "/modern/messages", params = {"delete", "id"})
+    public String removeModernMessages(HttpServletRequest req) {
+        messageService.removeMessages(req.getParameter("id"));
+        return "redirect:/modern/messages?id=" + req.getParameter("id");
+    }
+
+    private String showMessages(Model model, HttpServletRequest req, String viewName) {
+        String id = req.getParameter("id");
+        Subscription subscription = subscriptionService.get(id);
+        model.addAttribute("subscription", subscription);
+        model.addAttribute("messages", messageService.getMessages(id));
+        model.addAttribute("last", messageService.getLastMessageReceived(id));
+        model.addAttribute("MAX", MAX_SIZE_PER_SUBSCRIPTION);
+        return viewName;
+    }
 }

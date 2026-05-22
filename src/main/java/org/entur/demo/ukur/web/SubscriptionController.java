@@ -15,59 +15,24 @@
 
 package org.entur.demo.ukur.web;
 
-import org.apache.commons.lang3.StringUtils;
 import org.entur.demo.ukur.entities.Subscription;
 import org.entur.demo.ukur.services.MessageService;
 import org.entur.demo.ukur.services.SubscriptionService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.Collection;
-
 @Controller
-@SuppressWarnings("unused")
-public class SubscriptionController {
-
-    private final SubscriptionService subscriptionService;
-
-    private final MessageService messageService;
-
-//    @Autowired
-//    BuildProperties buildProperties;
+public class SubscriptionController extends AbstractSubscriptionController {
 
     @Autowired
     public SubscriptionController(SubscriptionService subscriptionService, MessageService messageService) {
-        this.subscriptionService = subscriptionService;
-        this.messageService = messageService;
-    }
-
-    @ModelAttribute("allSubscriptions")
-    public Collection<Subscription> populateSubscriptions() {
-        Collection<Subscription> all = this.subscriptionService.list();
-        for (Subscription subscription : all) {
-            subscription.setNumberOfMessages(messageService.getMessageCount(subscription.getId()));
-        }
-        return all;
-    }
-
-    @ModelAttribute("buildVersion")
-    public String buildVersion() {
-        final String buildTime = LocalDateTime.ofInstant(Instant.now(), ZoneId.systemDefault()).toString();
-        final String name = "buildProperties.getName()";
-        final String version = "buildProperties.getVersion()";
-        return "build-name: " + name + ", build-version: " + version + ", build-time: " + buildTime;
+        super(subscriptionService, messageService);
     }
 
     @RequestMapping("subscriptions")
@@ -88,87 +53,57 @@ public class SubscriptionController {
         return "subscriptions";
     }
 
-    private void validate(Subscription subscription, BindingResult bindingResult) {
-        if (!bindingResult.hasErrors()) {
-            if (subscription == null) {
-                //Should not happen....
-                bindingResult.addError(new ObjectError("subscription", "Subscription is null..."));
-            } else {
-                if (StringUtils.isBlank(subscription.getName())) {
-                    bindingResult.addError(new ObjectError("name", "A name is required"));
-                }
-                if (!subscription.validateHeartbeat()) {
-                    bindingResult.addError(new ObjectError("heartbeatInterval", "Illegal heartbeatInterval"));
-                }
-                if (subscription.getCodespaces().isEmpty() && subscription.getLineRefs().isEmpty()
-                        && ( subscription.getFromStopPoints().isEmpty() || subscription.getToStopPoints().isEmpty() ) ) {
-                    bindingResult.addError(new ObjectError("subscription", "No criterias given, must have at least one lineRef or one codespace or a fromStop and a toStop"));
-                }
-            }
-        }
-    }
-
     @RequestMapping(value = "subscriptions", params = {"addFrom", "from_value"})
     public String addFrom(Subscription subscription, HttpServletRequest req) {
-        String stop = req.getParameter("from_value");
-        subscription.addFromStopPoint(stop);
+        subscription.addFromStopPoint(req.getParameter("from_value"));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"removeFrom"})
     public String removeFrom(Subscription subscription, HttpServletRequest req) {
-        Integer rowId = Integer.valueOf(req.getParameter("removeFrom"));
-        subscription.getFromStopPoints().remove(rowId.intValue());
+        subscription.getFromStopPoints().remove(Integer.parseInt(req.getParameter("removeFrom")));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"addTo", "to_value"})
     public String addTo(Subscription subscription, HttpServletRequest req) {
-        String stop = req.getParameter("to_value");
-        subscription.addToStopPoint(stop);
+        subscription.addToStopPoint(req.getParameter("to_value"));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"removeTo"})
     public String removeTo(Subscription subscription, HttpServletRequest req) {
-        Integer rowId = Integer.valueOf(req.getParameter("removeTo"));
-        subscription.getToStopPoints().remove(rowId.intValue());
+        subscription.getToStopPoints().remove(Integer.parseInt(req.getParameter("removeTo")));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"deleteSubscriptionId"})
-    public String removeSubscription( Subscription s, Model model, HttpServletRequest req) {
-        String id = req.getParameter("deleteSubscriptionId");
-        subscriptionService.remove(id);
+    public String removeSubscription(Subscription s, HttpServletRequest req) {
+        subscriptionService.remove(req.getParameter("deleteSubscriptionId"));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"addLineRef", "lineref_value"})
     public String addLineRef(Subscription subscription, HttpServletRequest req) {
-        String lineref = req.getParameter("lineref_value");
-        subscription.addLineRef(lineref);
+        subscription.addLineRef(req.getParameter("lineref_value"));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"removeLineRef"})
     public String removeLineRef(Subscription subscription, HttpServletRequest req) {
-        Integer rowId = Integer.valueOf(req.getParameter("removeLineRef"));
-        subscription.getLineRefs().remove(rowId.intValue());
+        subscription.getLineRefs().remove(Integer.parseInt(req.getParameter("removeLineRef")));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"addCodespace", "codespace_value"})
     public String addCodespace(Subscription subscription, HttpServletRequest req) {
-        String codespace = req.getParameter("codespace_value");
-        subscription.addCodespace(codespace);
+        subscription.addCodespace(req.getParameter("codespace_value"));
         return "redirect:subscriptions";
     }
 
     @RequestMapping(value = "subscriptions", params = {"removeCodespace"})
     public String removeCodespace(Subscription subscription, HttpServletRequest req) {
-        Integer rowId = Integer.valueOf(req.getParameter("removeCodespace"));
-        subscription.getCodespaces().remove(rowId.intValue());
+        subscription.getCodespaces().remove(Integer.parseInt(req.getParameter("removeCodespace")));
         return "redirect:subscriptions";
     }
-
 }

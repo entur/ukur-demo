@@ -21,11 +21,15 @@ import org.entur.demo.ukur.entities.SubscriptionTypeEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
-import java.util.*;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class SubscriptionService {
@@ -34,8 +38,9 @@ public class SubscriptionService {
 
     private final String ukurURL;
     private String pushURL;
-    private long idCounter = 0;
+    private final AtomicLong idCounter = new AtomicLong(0);
     private final String basePushId;//need some uniqueness so we don't reuse push addresses at restart
+    private final RestTemplate restTemplate = new RestTemplate();
 
     private final HashMap<String, Subscription> subscriptions = new HashMap<>();
 
@@ -48,17 +53,6 @@ public class SubscriptionService {
         if (!pushURL.endsWith("/")) {
             this.pushURL = pushURL + "/";
         }
-        int delay = 20;
-        logger.info("Delays addition of test subscriptions by {} seconds", delay);
-        new Timer().schedule(
-                new TimerTask() {
-                    @Override
-                    public void run() {
-                        logger.info("Adds test subscriptions after {} seconds", delay);
-                        addTestSubscriptions();
-                    }
-                },
-                delay*1000);
     }
 
     public Collection<Subscription> list() {
@@ -81,10 +75,9 @@ public class SubscriptionService {
     }
 
     public boolean add(final Subscription subscription) {
-        RestTemplate restTemplate = new RestTemplate();
         try {
             URI url = URI.create(ukurURL);
-            String pushId = basePushId + idCounter++;
+            String pushId = basePushId + idCounter.getAndIncrement();
             subscription.setPushAddress(pushURL+pushId);
             Subscription returnedSubscription = restTemplate.postForObject(url, subscription, Subscription.class);
             if (returnedSubscription == null) {
@@ -105,7 +98,6 @@ public class SubscriptionService {
         Subscription subscription = get(id);
         if (subscription != null) {
             subscriptions.remove(subscription.getPushId());
-            RestTemplate restTemplate = new RestTemplate();
             try {
                 URI url = URI.create(ukurURL + "/" + id);
                 logger.debug("Removes subscription with delete to url {}", url);
@@ -117,7 +109,9 @@ public class SubscriptionService {
     }
 
 
-    private void addTestSubscriptions() {
+    @Scheduled(initialDelay = 20_000, fixedDelay = Long.MAX_VALUE)
+    void addTestSubscriptions() {
+        logger.info("Adds test subscriptions after startup delay");
         Subscription askerOslo1 = new Subscription();
         askerOslo1.setName("Asker-OsloS #1 with 30 minutes minimum arrival delay limit");
         askerOslo1.addFromStopPoint("NSR:StopPlace:418");
@@ -248,7 +242,7 @@ public class SubscriptionService {
         Subscription ruterLine1 = new Subscription();
         ruterLine1.setName("Ruter Line 1");
         ruterLine1.addLineRef("RUT:Line:1");
-        askerOslo1.setMinimumDelay("PT5M");
+        ruterLine1.setMinimumDelay("PT5M");
         add(ruterLine1);
 
         Subscription ruterSX = new Subscription();
