@@ -5,6 +5,9 @@ metadata:
 spec:
   allowlist:
     # libc6 - disputed by Debian, marked as non-security bug, no fix planned
+    - cve: "CVE-2026-5450"
+      comment: "Debian bookworm <no-dsa> (minor issue) - no fix; scanf %mc one-byte heap overflow, not reachable from JVM app"
+      reason: "wont_fix"
     - cve: "CVE-2019-1010022"
       comment: "Debian won't fix - requires arbitrary write access already present"
       reason: "wont_fix"

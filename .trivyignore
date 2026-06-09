@@ -4,6 +4,7 @@
 # Re-evaluate when Debian releases updated packages.
 
 # libc6 - glibc (disputed/won't-fix by Debian)
+CVE-2026-5450
 CVE-2019-1010022
 CVE-2019-1010023
 CVE-2019-1010024
