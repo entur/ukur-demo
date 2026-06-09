@@ -8,6 +8,12 @@ spec:
     - cve: "CVE-2026-5450"
       comment: "Debian bookworm <no-dsa> (minor issue) - no fix; scanf %mc one-byte heap overflow, not reachable from JVM app"
       reason: "wont_fix"
+    - cve: "CVE-2026-5435"
+      comment: "Debian bookworm <no-dsa> (minor issue) - no fix available"
+      reason: "wont_fix"
+    - cve: "CVE-2026-5928"
+      comment: "Debian bookworm <no-dsa> (minor issue) - no fix available"
+      reason: "wont_fix"
     - cve: "CVE-2019-1010022"
       comment: "Debian won't fix - requires arbitrary write access already present"
       reason: "wont_fix"
@@ -52,6 +58,12 @@ spec:
       reason: "wont_fix"
 
     # libexpat1 - no Debian patch released
+    - cve: "CVE-2026-45186"
+      comment: "Debian bookworm vulnerable - fix only in sid/forky, no bookworm patch"
+      reason: "wont_fix"
+    - cve: "CVE-2026-41080"
+      comment: "Debian bookworm <no-dsa> (minor issue) - no bookworm patch"
+      reason: "wont_fix"
     - cve: "CVE-2024-28757"
       comment: "No Debian patch available for libexpat1"
       reason: "wont_fix"
@@ -135,4 +147,18 @@ spec:
     # commons-lang / commons-lang3 - no fix released for any version
     - cve: "CVE-2025-48924"
       comment: "No fix available for any version of commons-lang"
+      reason: "wont_fix"
+
+    # TEMPORARY - fix exists upstream but not yet shipped in the distroless
+    # java21-debian12 base image. A freshly pulled image still has the
+    # vulnerable versions. Remove these once distroless rebuilds and a fresh
+    # image scans clean.
+    - cve: "CVE-2026-41254"
+      comment: "liblcms2-2: fixed in Debian bookworm-security 2.14-2+deb12u1, but distroless base still ships 2.14-2. Remove when distroless updates."
+      reason: "wont_fix"
+    - cve: "CVE-2026-34282"
+      comment: "openjdk: fixed in JDK 21.0.11, but distroless base still ships 21.0.10+7-LTS. Remove when distroless updates."
+      reason: "wont_fix"
+    - cve: "CVE-2026-22016"
+      comment: "openjdk: fixed in JDK 21.0.11, but distroless base still ships 21.0.10+7-LTS. Remove when distroless updates."
       reason: "wont_fix"

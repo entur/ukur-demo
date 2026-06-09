@@ -5,6 +5,8 @@
 
 # libc6 - glibc (disputed/won't-fix by Debian)
 CVE-2026-5450
+CVE-2026-5435
+CVE-2026-5928
 CVE-2019-1010022
 CVE-2019-1010023
 CVE-2019-1010024
@@ -21,6 +23,8 @@ CVE-2026-4438
 CVE-2025-15281
 
 # libexpat1 - no Debian patch available
+CVE-2026-45186
+CVE-2026-41080
 CVE-2024-28757
 CVE-2023-52426
 CVE-2025-59375
@@ -57,3 +61,12 @@ CVE-2025-29070
 
 # commons-lang / commons-lang3 - no fix released yet for any version
 CVE-2025-48924
+
+# TEMPORARY - fix exists upstream but not yet shipped in the distroless
+# java21-debian12 base image (pulled image still has the vulnerable version).
+# Remove these once distroless rebuilds and a fresh image scans clean.
+#   liblcms2-2: fixed in Debian bookworm-security 2.14-2+deb12u1 (image has 2.14-2)
+CVE-2026-41254
+#   openjdk: fixed in JDK 21.0.11 (image has 21.0.10+7-LTS)
+CVE-2026-34282
+CVE-2026-22016
