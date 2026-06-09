@@ -1,0 +1,11 @@
+name: uker demo release workflow
+on: push
+jobs:
+  build:
+    name: gh action demo
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: ./action-a
+        env:
+          MY_NAME: "Entur"
