@@ -28,7 +28,7 @@ spec:
           imagePullPolicy: {{ .Values.image.imagePullPolicy }}
           env:
             - name: JDK_JAVA_OPTIONS
-              value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties -Dfile.encoding=UTF-8
+              value: -server -Xmx{{ .Values.resources.xmx }} -Dspring.config.additional-location=/etc/application-config/application.properties -Dfile.encoding=UTF-8 -XX:+UseG1GC -XX:MaxGCPauseMillis=750 -XX:ConcGCThreads=2 -XX:ParallelGCThreads=5 -XX:-UseBASE64Intrinsics
             - name: TZ
               value: Europe/Oslo
           livenessProbe:
