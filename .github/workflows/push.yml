@@ -55,9 +55,16 @@ jobs:
       release_name: ukur-demo
     secrets: inherit
 
+  supersede-tst:
+    if: ${{ success() && github.ref == 'refs/heads/master' }}
+    needs: [ deploy-dev ]
+    uses: ./.github/workflows/supersede.yml
+    permissions:
+      actions: write
+
   approval-tst:
       if: ${{ github.ref == 'refs/heads/master' }}
-      needs: deploy-dev
+      needs: [ deploy-dev, supersede-tst ]
       runs-on: ubuntu-latest
       timeout-minutes: 10
       environment: Approve
@@ -79,9 +86,16 @@ jobs:
         release_name: ukur-demo
       secrets: inherit
 
+  supersede-prd:
+    if: ${{ success() && github.ref == 'refs/heads/master' }}
+    needs: [ deploy-tst ]
+    uses: ./.github/workflows/supersede.yml
+    permissions:
+      actions: write
+
   approval-prd:
       if: ${{ github.ref == 'refs/heads/master' }}
-      needs: deploy-tst
+      needs: [ deploy-tst, supersede-prd ]
       runs-on: ubuntu-latest
       timeout-minutes: 10
       environment: Approve
